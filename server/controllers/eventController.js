@@ -63,7 +63,11 @@ class EventController {
       if (event.player.length >= event.quota) {
         return res.status(400).send({ message: 'Event is full' });
       }
-      event.player.push(req.user._id);
+      event.player.push({
+        _id: req.user._id,
+        username: req.user.username,
+        avatar: req.user.avatar
+      });
       await db.collection('events').updateOne({ _id: new ObjectId(req.params.eventId) }, { $set: { player: event.player } });
       res.send(event);
     } catch (error) {
@@ -89,7 +93,8 @@ class EventController {
 
       getEvents.forEach((event) => {
         playersNotified.push(event._id);
-        const players = event.player;
+        const players = event.players;
+        console.log(event);
         const date = new Date(event.date).toLocaleDateString();
         players.forEach(async (player) => {
           const id = new ObjectId(player);
@@ -100,7 +105,8 @@ class EventController {
                 notification: {
                   eventId: event._id,
                   message: `Can you attend ${event.name} at ${date}?`
-                }
+                }git add .
+                
               }
             }
           );

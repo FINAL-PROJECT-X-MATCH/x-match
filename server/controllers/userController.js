@@ -99,7 +99,7 @@ class UserController {
     }
   }
 
-  static async checkStatus(req, res) {
+  static async checkStatus() {
     try {
       const today = new Date();
       const yesterday = new Date();
@@ -131,10 +131,8 @@ class UserController {
         });
         console.log(`User(s) with ID(s) ${unbannedUsers.join(',')} has/have been unbanned`);
       }
-      res.status(200).send({ message: "Check status completed" });
     } catch (error) {
       console.log(error, "Error handler");
-      res.status(500).send({ error: "Internal Server Error" });
     }
   }
 
