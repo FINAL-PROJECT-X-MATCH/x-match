@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, TextInput, Image, Text, ScrollView, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, TextInput, Image, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Switch } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import MapView, { Marker, MapPressEvent, PROVIDER_DEFAULT } from 'react-native-maps';
@@ -38,13 +38,15 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
     longitudeDelta: 0.0421,
   });
   const [loading, setLoading] = useState(false);
+  const [isFree, setIsFree] = useState(true);
+  const [price, setPrice] = useState('');
 
   const { user } = useAuth();
   const ref = useRef<any>(null);
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Toast.show({
           type: 'error',
@@ -54,7 +56,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
+      const location = await Location.getCurrentPositionAsync({});
       setLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -69,7 +71,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
   }, []);
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
@@ -116,6 +118,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
           type: 'image/jpeg',
         } as any);
       }
+      formData.append('price', isFree ? 'free' : (Number(price) + 1000).toString());
 
       try {
         await axiosInstance.post('/event', formData, {
@@ -130,6 +133,24 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
           text2: 'Your event has been created successfully.'
         });
         navigation.navigate('Home');
+        // Reset form state
+        setName('');
+        setCategory('');
+        setAddress('');
+        setDate(new Date());
+        setQuota(0);
+        setDescription('');
+        setImage(null);
+        setLocation({ latitude: -7.2575, longitude: 112.7521 });
+        setLocationPicked(false);
+        setRegion({
+          latitude: -7.2575,
+          longitude: 112.7521,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        });
+        setIsFree(true);
+        setPrice('');
       } catch (error: any) {
         console.error('Error creating event:', error.response ? error.response.data : error.message);
         Toast.show({
@@ -155,7 +176,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
       style={tw`flex-1`}
     >
       <LinearGradient
-        colors={['#4F46E5', '#7C3AED']}
+        colors={['rgb(234, 88, 12)', 'rgb(249, 115, 22)']}
         style={tw`absolute top-0 left-0 right-0 h-64 rounded-b-3xl`}
       />
       <ScrollView style={tw`flex-1`} contentContainerStyle={tw`p-6 pt-16`}>
@@ -165,7 +186,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Event Name</Text>
             <View style={tw`flex-row items-center bg-gray-100 rounded-xl p-2`}>
-              <MaterialCommunityIcons name="calendar-text" size={24} color="#4F46E5" style={tw`mr-2`} />
+              <MaterialCommunityIcons name="calendar-text" size={24} color="rgb(249 115 22)" style={tw`mr-2`} />
               <TextInput
                 placeholder="Enter event name"
                 value={name}
@@ -204,7 +225,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
                   inputAndroid: tw`p-4 text-gray-800 text-lg`,
                 }}
                 placeholder={{ label: 'Select a category', value: null }}
-                Icon={() => <MaterialCommunityIcons name="chevron-down" size={24} color="#4F46E5" />}
+                Icon={() => <MaterialCommunityIcons name="chevron-down" size={24} color="rgb(249 115 22)" />}
               />
             </View>
           </View>
@@ -216,7 +237,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
               style={tw`bg-gray-100 p-4 rounded-xl flex-row items-center justify-between`}
             >
               <Text style={tw`text-gray-800 text-lg`}>{moment(date).format('MMMM D, YYYY')}</Text>
-              <MaterialCommunityIcons name="calendar" size={24} color="#4F46E5" />
+              <MaterialCommunityIcons name="calendar" size={24} color="rgb(249 115 22)" />
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -232,7 +253,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Quota</Text>
             <View style={tw`flex-row items-center bg-gray-100 rounded-xl`}>
               <TouchableOpacity onPress={() => setQuota(Math.max(0, quota - 1))} style={tw`p-4`}>
-                <MaterialCommunityIcons name="minus-circle" size={24} color="#4F46E5" />
+                <MaterialCommunityIcons name="minus-circle" size={24} color="rgb(249 115 22)" />
               </TouchableOpacity>
               <TextInput
                 value={quota.toString()}
@@ -241,16 +262,49 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
                 style={tw`flex-1 text-center text-lg text-gray-800`}
               />
               <TouchableOpacity onPress={() => setQuota(quota + 1)} style={tw`p-4`}>
-                <MaterialCommunityIcons name="plus-circle" size={24} color="#4F46E5" />
+                <MaterialCommunityIcons name="plus-circle" size={24} color="rgb(249 115 22)" />
               </TouchableOpacity>
             </View>
           </View>
+
+          <View style={tw`mb-6`}>
+            <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Paid Event</Text>
+            <View style={tw`flex-row items-center`}>
+              <Switch
+                value={!isFree}
+                onValueChange={() => setIsFree(!isFree)}
+                trackColor={{ false: 'gray', true: 'rgb(249 115 22)' }}
+                thumbColor="white"
+              />
+              <Text style={tw`ml-2 text-gray-700`}>{isFree ? 'Free' : 'Paid'}</Text>
+            </View>
+          </View>
+
+          {!isFree && (
+            <View style={tw`mb-6`}>
+              <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Price (Rp)</Text>
+              <View style={tw`flex-row items-center bg-gray-100 rounded-xl p-2`}>
+                <TextInput
+                  placeholder="Enter price"
+                  value={price}
+                  onChangeText={setPrice}
+                  keyboardType="numeric"
+                  style={tw`flex-1 text-gray-800 text-lg`}
+                />
+              </View>
+              {price && (
+                <Text style={tw`mt-2 text-gray-600 italic`}>
+                  The event price will be shown as Rp {Number(price) + 1000}
+                </Text>
+              )}
+            </View>
+          )}
           
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Location</Text>
             <TouchableOpacity
               onPress={() => setModalVisible(true)}
-              style={tw`bg-indigo-600 p-4 rounded-xl flex-row items-center justify-center`}
+              style={tw`bg-orange-500 p-4 rounded-xl flex-row items-center justify-center`}
             >
               <MaterialCommunityIcons name="map-marker" size={24} color="white" style={tw`mr-2`} />
               <Text style={tw`text-white text-center font-semibold text-lg`}>Select Location</Text>
@@ -264,7 +318,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Event Image</Text>
             <TouchableOpacity
               onPress={pickImage}
-              style={tw`bg-indigo-600 p-4 rounded-xl flex-row items-center justify-center`}
+              style={tw`bg-orange-500 p-4 rounded-xl flex-row items-center justify-center`}
             >
               <MaterialCommunityIcons name="camera" size={24} color="white" style={tw`mr-2`} />
               <Text style={tw`text-white text-center font-semibold text-lg`}>Choose Image</Text>
@@ -276,11 +330,11 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
         </View>
         
         {loading ? (
-          <ActivityIndicator size="large" color="#4F46E5" />
+          <ActivityIndicator size="large" color="rgb(249 115 22)" />
         ) : (
           <TouchableOpacity
             onPress={createEvent}
-            style={tw`bg-indigo-600 p-4 rounded-xl mt-4`}
+            style={tw`bg-orange-500 p-4 rounded-xl mt-4`}
           >
             <Text style={tw`text-white text-center font-bold text-lg`}>Create Event</Text>
           </TouchableOpacity>
@@ -293,7 +347,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
         style={tw`m-0 justify-end`}
       >
         <View style={tw`bg-white rounded-t-3xl p-6 h-4/5`}>
-          <Text style={tw`text-2xl font-bold mb-4 text-center text-indigo-600`}>Select Location</Text>
+          <Text style={tw`text-2xl font-bold mb-4 text-center text-orange-500`}>Select Location</Text>
           <GooglePlacesAutocomplete
             ref={ref}
             placeholder="Search for location"
@@ -339,7 +393,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
           </MapView>
           <TouchableOpacity
             onPress={() => setModalVisible(false)}
-            style={tw`bg-indigo-600 p-4 rounded-xl mt-4`}
+            style={tw`bg-orange-500 p-4 rounded-xl mt-4`}
           >
             <Text style={tw`text-white text-center font-semibold text-lg`}>Confirm Location</Text>
           </TouchableOpacity>

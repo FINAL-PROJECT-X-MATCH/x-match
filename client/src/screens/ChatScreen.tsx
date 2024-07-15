@@ -208,7 +208,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
         key={item._id}
       >
         <LinearGradient
-          colors={isCurrentUser ? ['#4F46E5', '#3730A3'] : ['#F3F4F6', '#E5E7EB']}
+          colors={isCurrentUser ? [ 'rgb(253 186 116)','rgb(251 146 60)', 'rgb(253 186 116)'] : ['rgb(255 247 237)', 'rgb(229 231 235)']}
           style={[
             tw`max-w-[80%] p-3 rounded-2xl shadow-md`,
             isCurrentUser ? tw`rounded-br-none` : tw`rounded-bl-none`,
@@ -233,14 +233,14 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
 
   return (
     <PaperProvider>
-      <LinearGradient colors={['#F3F4F6', '#E5E7EB']} style={tw`flex-1`}>
+      <LinearGradient colors={['rgb(255 247 237)', 'rgb(229 231 235)']} style={tw`flex-1`}>
         <KeyboardAvoidingView
           style={tw`flex-1`}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={80}
         >
           <Appbar.Header style={tw`bg-transparent shadow-none`}>
-            <Appbar.BackAction onPress={() => navigation.goBack()} color="#4F46E5" />
+            <Appbar.BackAction onPress={() => navigation.goBack()} color="rgb(251 146 60)" />
             <Appbar.Content title="Chat Group" titleStyle={tw`text-gray-800 font-bold`} />
           </Appbar.Header>
           <FlatList
@@ -259,16 +259,16 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
           )}
           {isUploading && (
             <BlurView intensity={100} tint="light" style={tw`p-2 border-t border-gray-200 flex-row justify-center`}>
-              <ActivityIndicator size="large" color="#4F46E5" />
+              <ActivityIndicator size="large" color="rgb(251 146 60)" />
             </BlurView>
           )}
           <BlurView intensity={100} tint="light" style={tw`p-2 border-t border-gray-200`}>
             <View style={tw`flex-row items-center p-2 bg-white rounded-full shadow-md`}>
               <TouchableOpacity onPress={selectImage} style={tw`ml-2 mr-2`}>
-                <MaterialCommunityIcons name="image" size={24} color="#4F46E5" />
+                <MaterialCommunityIcons name="image" size={24} color="rgb(251 146 60)" />
               </TouchableOpacity>
               <TouchableOpacity onPress={takePhoto} style={tw`ml-2 mr-2`}>
-                <MaterialCommunityIcons name="camera" size={24} color="#4F46E5" />
+                <MaterialCommunityIcons name="camera" size={24} color="rgb(251 146 60)" />
               </TouchableOpacity>
               <View style={tw`flex-1 h-10`}>
                 <TextInput
@@ -279,7 +279,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
                   onChangeText={setMessage}
                 />
               </View>
-              <TouchableOpacity onPress={sendMessage} style={tw`ml-2 bg-[#4F46E5] rounded-full p-2`}>
+              <TouchableOpacity onPress={sendMessage} style={tw`ml-2 bg-orange-600 rounded-full p-2`}>
                 <MaterialCommunityIcons name="send" size={24} color="white" />
               </TouchableOpacity>
             </View>

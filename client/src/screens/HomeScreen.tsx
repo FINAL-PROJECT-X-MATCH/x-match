@@ -101,7 +101,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         });
         const notifications = Array.isArray(response.data) ? response.data : [];
         setNotifications(notifications);
-        setUnreadCount(notifications.filter((notification: any) => !notification.read).length); // Count unread notifications
+        setUnreadCount(notifications.filter((notification: any) => !notification.read).length); 
         setModalVisible(true);
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -141,15 +141,15 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'football':
-        return <Ionicons name="football" size={16} color="#4F46E5" />;
+        return <Ionicons name="football" size={16} color="rgb(249 115 22)" />;
       case 'futsal':
-        return <MaterialCommunityIcons name="soccer" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="soccer" size={16} color="rgb(249 115 22)" />;
       case 'gym':
-        return <MaterialCommunityIcons name="dumbbell" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="dumbbell" size={16} color="rgb(249 115 22)" />;
       case 'basketball':
-        return <MaterialCommunityIcons name="basketball" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="basketball" size={16} color="rgb(249 115 22)" />;
       default:
-        return <MaterialIcons name="sports" size={16} color="#4F46E5" />;
+        return <MaterialIcons name="sports" size={16} color="rgb(249 115 22)" />;
     }
   };
 
@@ -176,6 +176,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     return distance.toFixed(2);
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+    }).format(price);
+  };
+
   const popularEvents = events.sort((a, b) => b.player.length - a.player.length).slice(0, 3);
 
   const nearbyEvents = events.filter(event => {
@@ -196,12 +203,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     >
       <View style={tw`bg-white rounded-3xl overflow-hidden shadow-lg`}>
         <Image source={{ uri: item.imageLocation }} style={tw`w-full h-36`} />
-        <LinearGradient
-          colors={['rgba(79,70,229,0.8)', 'transparent']}
-          style={tw`absolute top-0 left-0 right-0 h-16`}
-        />
+        
         <View style={tw`absolute top-2 right-2 bg-white rounded-full p-2`}>
-          <FontAwesome name="heart-o" size={20} color="#4F46E5" />
+          <FontAwesome name="heart-o" size={20} color="#f97316" />
         </View>
         <View style={tw`p-3`}>
           <Text style={tw`text-base font-bold mb-1 text-black`}>{item.name}</Text>
@@ -211,20 +215,24 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <View style={tw`flex-row items-center justify-between`}>
             <View style={tw`flex-row items-center`}>
-              <Ionicons name="calendar-outline" size={14} color="#4F46E5" />
+              <Ionicons name="calendar-outline" size={14} color="#f97316" />
               <Text style={tw`ml-1 text-xs text-gray-500`}>{formatDate(item.date)}</Text>
             </View>
             <View style={tw`flex-row items-center`}>
-              <FontAwesome name="users" size={14} color="#4F46E5" />
-              <Text style={tw`ml-1 text-xs text-[#4F46E5]`}>{`${item.player.length}/${item.quota}`}</Text>
+              <FontAwesome name="users" size={14} color="#f97316" />
+              <Text style={tw`ml-1 text-xs text-[#f97316]`}>{`${item.player.length}/${item.quota}`}</Text>
             </View>
           </View>
           {location && (
             <View style={tw`flex-row items-center justify-start mt-2`}>
-              <Ionicons name="location-outline" size={14} color="#4F46E5" />
+              <Ionicons name="location-outline" size={14} color="#f97316" />
               <Text style={tw`ml-1 text-xs text-gray-500`}>{`${getDistance(item)} km`}</Text>
             </View>
           )}
+          <View style={tw`flex-row items-center justify-start mt-2`}>
+            <Ionicons name="pricetag-outline" size={14} color="#f97316" />
+            <Text style={tw`ml-1 text-xs text-gray-500`}>{item.price === 'free' ? 'Free' : formatPrice(item.price)}</Text>
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -245,7 +253,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   if (loading) {
-    return <ActivityIndicator style={tw`flex-1`} size="large" color="#4F46E5" />;
+    return <ActivityIndicator style={tw`flex-1`} size="large" color="#f97316" />;
   }
 
   return (
@@ -255,21 +263,21 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         <RefreshControl
           refreshing={refreshing}
           onRefresh={onRefresh}
-          colors={['#4F46E5']}
+          colors={['#f97316']}
         />
       }
     >
       <LinearGradient
-        colors={['#4F46E5', '#818CF8']}
+        colors={['background-color: rgb(234 88 12);', 'background-color:rgb(249 115 22)']}
         style={tw`pt-12 pb-6 px-4 rounded-b-3xl`}
       >
         <View style={tw`flex-row items-center justify-between mb-6`}>
           <View>
             <Text style={tw`text-3xl font-bold text-white`}>Welcome back!</Text>
-            <Text style={tw`text-xl text-indigo-200`}>{user?.username}</Text>
+            <Text style={tw`text-xl text-white`}>{user?.username}</Text>
           </View>
           <TouchableOpacity style={tw`relative bg-white p-3 rounded-full shadow-md`} onPress={() => { fetchNotifications(); setModalVisible(true); }}>
-            <Ionicons name="notifications" size={24} color="#4F46E5" />
+            <Ionicons name="notifications" size={24} color="rgb(249 115 22)" />
             {unreadCount > 0 && (
               <View style={tw`absolute -top-1 -right-1 bg-red-600 h-5 w-5 rounded-full justify-center items-center`}>
                 <Text style={tw`text-white text-xs font-bold`}>{unreadCount}</Text>
@@ -293,9 +301,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           )}
           renderItem={renderBanner}
           contentContainerStyle={tw`px-4`}
-          snapToInterval={bannerWidth + 10}  // Add space between banners
+          snapToInterval={bannerWidth + 10}  
           decelerationRate="fast"
-          ItemSeparatorComponent={() => <View style={tw`w-2`} />}  // Adjust space between banners
+          ItemSeparatorComponent={() => <View style={tw`w-2`} />}  
         />
         <View style={tw`flex-row justify-center mt-4`}>
           {banners.map((_, i) => {
@@ -314,7 +322,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               <Animated.View
                 key={i.toString()}
                 style={[
-                  tw`h-2 w-2 rounded-full mx-1 bg-[#4F46E5]`,
+                  tw`h-2 w-2 rounded-full mx-1 bg-[#f97316]`,
                   { opacity, transform: [{ scale }] },
                 ]}
               />
@@ -331,10 +339,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           renderItem={({ item }) => (
             <TouchableOpacity 
               onPress={() => navigation.navigate('ListEvent', { category: item })}
-              style={tw`mr-3 bg-white px-6 py-3 rounded-full shadow-md border-2 border-[#4F46E5] flex-row items-center`}
+              style={tw`mr-3 bg-white px-6 py-3 rounded-full shadow-md border-2 border-[#f97316] flex-row items-center`}
             >
               {getCategoryIcon(item)}
-              <Text style={tw`text-[#4F46E5] font-bold text-base ml-2`}>{item}</Text>
+              <Text style={tw`text-[#f97316] font-bold text-base ml-2`}>{item}</Text>
             </TouchableOpacity>
           )}
           showsHorizontalScrollIndicator={false}
@@ -368,7 +376,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
               showsVerticalScrollIndicator={false}
             />
             <TouchableOpacity
-              style={tw`mt-4 bg-indigo-600 py-3 px-6 rounded-full`}
+              style={tw`mt-4 bg-orange-600 py-3 px-6 rounded-full`}
               onPress={() => {
                 setModalVisible(!modalVisible);
                 markNotificationsAsRead();

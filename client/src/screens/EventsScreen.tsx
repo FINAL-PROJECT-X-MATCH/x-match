@@ -34,6 +34,7 @@ const Events: React.FC<Props> = ({ navigation }) => {
           const response = await axiosInstance.get('/events', {
             headers: { Authorization: `Bearer ${user.token}` }
           });
+
           setEvents(response.data);
           setFilteredEvents(response.data);
           setLoading(false);
@@ -64,8 +65,16 @@ const Events: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
+    const today = new Date()
+    const oneDayAfter = new Date()
+    oneDayAfter.setDate(today.getDate() + 1)
+    const twoDayAfter = new Date()
+    twoDayAfter.setDate(today.getDate() + 2)
+   
     const filtered = events.filter(event => event.name.toLowerCase().includes(searchText.toLowerCase()));
-    setFilteredEvents(filtered);
+    const newFilter = filtered.filter(event => new Date(event.date) > twoDayAfter)
+    
+    setFilteredEvents(newFilter);
   }, [searchText, events]);
 
   const onRefresh = async () => {
@@ -118,15 +127,15 @@ const Events: React.FC<Props> = ({ navigation }) => {
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'football':
-        return <Ionicons name="football" size={16} color="#4F46E5" />;
+        return <Ionicons name="football" size={16} color="#f97316" />;
       case 'futsal':
-        return <MaterialCommunityIcons name="soccer" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="soccer" size={16} color="#f97316" />;
       case 'gym':
-        return <MaterialCommunityIcons name="dumbbell" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="dumbbell" size={16} color="#f97316" />;
       case 'basketball':
-        return <MaterialCommunityIcons name="basketball" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="basketball" size={16} color="#f97316" />;
       default:
-        return <MaterialIcons name="sports" size={16} color="#4F46E5" />;
+        return <MaterialIcons name="sports" size={16} color="#f97316" />;
     }
   };
 
@@ -153,13 +162,20 @@ const Events: React.FC<Props> = ({ navigation }) => {
     return distance.toFixed(2);
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+    }).format(price);
+  };
+
   const renderEventItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
       onPress={() => navigation.navigate('EventDetail', { eventId: item._id })} 
       style={tw`mb-4`}
     >
       <LinearGradient
-        colors={['#e0eafc', '#cfdef3']}
+        colors={['rgb(255 247 237)', 'rgb(255 247 237)']}
         style={tw`bg-white rounded-3xl overflow-hidden shadow-lg`}
       >
         <Image source={{ uri: item.imageLocation }} style={tw`w-full h-48`} />
@@ -167,38 +183,42 @@ const Events: React.FC<Props> = ({ navigation }) => {
           <Text style={tw`text-base font-bold mb-1 text-black`}>{item.name}</Text>
           <View style={tw`flex-row items-center mb-2`}>
             {getCategoryIcon(item.category)}
-            <Text style={tw`text-xs text-gray-600 ml-1`}>{item.category}</Text>
+            <Text style={tw`text-xs text-gray-700 ml-1`}>{item.category}</Text>
           </View>
           <View style={tw`flex-row items-center justify-between`}>
             <View style={tw`flex-row items-center`}>
-              <Ionicons name="calendar-outline" size={14} color="#4F46E5" />
-              <Text style={tw`ml-1 text-xs text-gray-500`}>{formatDate(item.date)}</Text>
+              <Ionicons name="calendar-outline" size={14} color="rgb(249 115 22)" />
+              <Text style={tw`ml-1 text-xs text-gray-700`}>{formatDate(item.date)}</Text>
             </View>
             <View style={tw`flex-row items-center`}>
-              <FontAwesome name="users" size={14} color="#4F46E5" />
-              <Text style={tw`ml-1 text-xs text-[#4F46E5]`}>{`${item.player.length}/${item.quota}`}</Text>
+              <FontAwesome name="users" size={14} color="rgb(249 115 22)" />
+              <Text style={tw`ml-1 text-xs text-gray-700`}>{`${item.player.length}/${item.quota}`}</Text>
             </View>
           </View>
           {location && (
             <View style={tw`flex-row items-center justify-start mt-2`}>
-              <Ionicons name="location-outline" size={14} color="#4F46E5" />
-              <Text style={tw`ml-1 text-xs text-gray-500`}>{`${getDistance(item)} km`}</Text>
+              <Ionicons name="location-outline" size={14} color="rgb(249 115 22)" />
+              <Text style={tw`ml-1 text-xs text-gray-700`}>{`${getDistance(item)} km`}</Text>
             </View>
           )}
+          <View style={tw`flex-row items-center justify-start mt-2`}>
+            <Ionicons name="pricetag-outline" size={14} color="rgb(249 115 22)" />
+            <Text style={tw`ml-1 text-xs text-gray-700`}>{item.price === 'free' ? 'Free' : formatPrice(item.price)}</Text>
+          </View>
         </View>
       </LinearGradient>
     </TouchableOpacity>
   );
 
   if (loading) {
-    return <ActivityIndicator style={tw`flex-1`} size="large" color="#4F46E5" />;
+    return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(249 115 22)" />;
   }
 
   return (
     <View style={tw`flex-1 bg-gray-50`}>
-      <LinearGradient colors={['#4F46E5', '#818CF8']} style={tw`pt-12 pb-6 px-4 rounded-b-3xl`}>
+      <LinearGradient colors={['rgb(234 88 12)', 'rgb(249 115 22)']} style={tw`pt-12 pb-6 px-4 rounded-b-3xl`}>
         <View style={tw`bg-white rounded-full px-4 py-3 shadow-lg flex-row items-center`}>
-          <MaterialIcons name="search" size={24} color="#4F46E5" />
+          <MaterialIcons name="search" size={24} color="rgb(249 115 22)" />
           <TextInput
             placeholder="Search events..."
             value={searchText}
@@ -208,13 +228,13 @@ const Events: React.FC<Props> = ({ navigation }) => {
           />
         </View>
         <View style={tw`flex-row justify-between mt-4`}>
-          <TouchableOpacity onPress={() => setSortOption('newest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'newest' ? 'bg-[#4F46E5]' : 'bg-gray-100'}`}>
+          <TouchableOpacity onPress={() => setSortOption('newest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'newest' ? 'bg-orange-400' : 'bg-gray-100'}`}>
             <Text style={tw`${sortOption === 'newest' ? 'text-white' : 'text-black'}`}>Newest</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSortOption('oldest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'oldest' ? 'bg-[#4F46E5]' : 'bg-gray-100'}`}>
+          <TouchableOpacity onPress={() => setSortOption('oldest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'oldest' ? 'bg-orange-400' : 'bg-gray-100'}`}>
             <Text style={tw`${sortOption === 'oldest' ? 'text-white' : 'text-black'}`}>Oldest</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSortOption('nearest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'nearest' ? 'bg-[#4F46E5]' : 'bg-gray-100'}`}>
+          <TouchableOpacity onPress={() => setSortOption('nearest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'nearest' ? 'bg-orange-400' : 'bg-gray-100'}`}>
             <Text style={tw`${sortOption === 'nearest' ? 'text-white' : 'text-black'}`}>Nearest</Text>
           </TouchableOpacity>
         </View>
@@ -229,7 +249,7 @@ const Events: React.FC<Props> = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#4F46E5']}
+            colors={['rgb(249 115 22)']}
           />
         }
         ListHeaderComponent={() => (

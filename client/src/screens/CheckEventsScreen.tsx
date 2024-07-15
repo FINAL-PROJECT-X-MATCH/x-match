@@ -40,7 +40,7 @@ const CheckEventsScreen = () => {
   }, []);
 
   if (loading) {
-    return <ActivityIndicator style={tw`flex-1`} size="large" color="#4F46E5" />;
+    return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(249 115 22)" />;
   }
 
   return (

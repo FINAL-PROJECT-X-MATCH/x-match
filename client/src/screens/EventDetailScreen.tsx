@@ -92,13 +92,13 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
     }
   };
 
-  if (!event) return <ActivityIndicator style={tw`flex-1`} size="large" color="#4F46E5" />;
+  if (!event) return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(249 115 22)" />;
 
   return (
     <View style={tw`flex-1`}>
       <View style={tw`absolute top-10 left-5 z-10`}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={tw`bg-white p-2 rounded-full shadow`}>
-          <Ionicons name="arrow-back" size={24} color="#4F46E5" />
+          <Ionicons name="arrow-back" size={24} color="rgb(249 115 22)" />
         </TouchableOpacity>
       </View>
       <ScrollView contentContainerStyle={tw`pb-10`}>
@@ -114,15 +114,15 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
             <View style={tw`p-6`}>
               <Text style={tw`text-3xl font-bold text-gray-800 mb-2`}>{event.name}</Text>
               <View style={tw`flex-row items-center mb-4`}>
-                <Ionicons name="person-circle" size={24} color="#4F46E5" />
+                <Ionicons name="person-circle" size={24} color="rgb(249 115 22)" />
                 <Text style={tw`text-base text-gray-600 ml-2`}>Posted by {event.authorUsername}</Text>
               </View>
               <View style={tw`flex-row items-center mb-4 bg-gray-100 p-4 rounded-xl`}>
-                <Ionicons name="calendar" size={20} color="#4F46E5" />
+                <Ionicons name="calendar" size={20} color="rgb(249 115 22)" />
                 <Text style={tw`text-base text-gray-700 ml-3`}>{moment(event.date).format('dddd, DD MMMM YYYY')}</Text>
               </View>
               <TouchableOpacity onPress={openLocationInMaps} style={tw`flex-row items-center mb-4 bg-gray-100 p-4 rounded-xl`}>
-                <Ionicons name="location" size={20} color="#4F46E5" />
+                <Ionicons name="location" size={20} color="rgb(249 115 22)" />
                 <Text style={tw`text-base text-gray-700 ml-3 underline`}>{event.address}</Text>
               </TouchableOpacity>
             </View>
@@ -152,7 +152,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           <BlurView intensity={80} tint="light" style={tw`rounded-3xl overflow-hidden mb-6`}>
             <View style={tw`p-6`}>
               <View style={tw`flex-row items-center mb-4`}>
-                <Ionicons name="pricetag" size={20} color="#4F46E5" />
+                <Ionicons name="pricetag" size={20} color="rgb(249 115 22)" />
                 <Text style={tw`text-base text-gray-700 ml-3`}>{event.category}</Text>
               </View>
               <Text style={tw`text-base text-gray-700`}>{event.description}</Text>
@@ -161,7 +161,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
 
           {isJoined && (
             <View style={styles.joinedMessageContainer}>
-              <Ionicons name="checkmark-circle" size={32} color="#4F46E5" />
+              <Ionicons name="checkmark-circle" size={32} color="rgb(249 115 22)" />
               <Text style={styles.joinedMessageText}>You have joined this event</Text>
             </View>
           )}
@@ -173,7 +173,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           {!isJoined && (
             <TouchableOpacity onPress={joinEvent}>
               <LinearGradient
-                colors={['#4F46E5', '#5753E8']}
+                colors={['rgb(249 115 22)', 'rgb(234 88 12)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={tw`py-4 px-8 rounded-full shadow-lg`}
@@ -187,7 +187,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
 
       {isJoined && (
         <TouchableOpacity
-          style={[styles.chatBubble, tw`bg-indigo-600`]}
+          style={[styles.chatBubble, tw`bg-orange-600`]}
           onPress={() => navigation.navigate('Chat', { eventId })}
         >
           <Ionicons name="chatbubble-ellipses" size={24} color="white" />
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   joinedMessageText: {
     textAlign: 'center',
-    color: '#4F46E5',
+    color: 'rgb(249 115 22)',
     fontSize: 16,
     marginTop: 5,
   },
