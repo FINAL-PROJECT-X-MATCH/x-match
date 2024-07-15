@@ -128,23 +128,31 @@ class EventController {
       tommorow.setDate(today.getDate() + 1)
       const db = await getDb()
       const users = await db.collection("users").find().toArray()
-      users.forEach(user => {
-        const notifications = user.notification
-        notifications.forEach(async (notification) => {
+      users.forEach(async (user) => {
+        let banned = false
+        const notifIndex = []
+        let notifications = user.notification
+        notifications.forEach(async (notification, i) => {
           if (notification.date === yesterday || notification.date > yesterday) {
-            const banUser = await db.collection("users").findOne(
-              { _id: user._id },
-              {
-                $set: {
-                  status: {
-                    ban: true,
-                    duration: tommorow.toISOString()
-                  }
-                }
-              }
-            )
+            banned = true
+            notifIndex.push(i)
           }
         })
+        const newNotif = notifications.filter((_,index) => !notifIndex.includes(index))
+        if (banned === true) {
+          const banUser = await db.collection("users").updateOne(
+            { _id: user._id },
+            {
+              $set: {
+                status: {
+                  ban: true,
+                  duration: tommorow.toISOString()
+                },
+                notifications: newNotif
+              }
+            }
+          )
+        }
       })
     } catch (error) {
       console.log(error);
@@ -162,7 +170,7 @@ class EventController {
         return res.status(404).json({ message: "Id not found" })
       }
       const index = user.notification.findIndex(obj => obj._id === new ObjectId(eventId))
-      user.notification.splice(index)
+      user.notification.splice(index, 1)
       const updateNotif = await db.collection("users").updateOne(
         { _id: new ObjectId(eventId) },
         {
@@ -177,7 +185,7 @@ class EventController {
         return res.status(404).json({ message: "Id not found" })
       }
       const playerIndex = event.player.findIndex(obj => obj._id === userId)
-      event.player.splice(playerIndex)
+      event.player.splice(playerIndex, 1)
       const updateEvent = await db.collection("ecents").updateOne(
         { _id: new ObjectId(eventId) },
         {
