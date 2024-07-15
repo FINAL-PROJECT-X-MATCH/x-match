@@ -121,9 +121,19 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                 <Ionicons name="calendar" size={20} color="#4F46E5" />
                 <Text style={tw`text-base text-gray-700 ml-3`}>{moment(event.date).format('dddd, DD MMMM YYYY')}</Text>
               </View>
-              <TouchableOpacity onPress={openLocationInMaps} style={tw`flex-row items-center mb-4 bg-gray-100 p-4 rounded-xl`}>
+              <View style={tw`flex-row items-center mb-4 bg-gray-100 p-4 rounded-xl`}>
                 <Ionicons name="location" size={20} color="#4F46E5" />
                 <Text style={tw`text-base text-gray-700 ml-3 underline`}>{event.address}</Text>
+              </View>
+              <TouchableOpacity onPress={openLocationInMaps} style={tw`flex-col items-center mb-4 bg-gray-100 p-4 rounded-xl`}>
+                <LinearGradient
+                  colors={['#4F46E5', '#5753E8']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={tw`py-2 px-4 rounded-full shadow-lg`}
+                >
+                  <Text style={tw`text-white font-bold text-lg text-center`}>Open Map</Text>
+                </LinearGradient>
               </TouchableOpacity>
             </View>
           </BlurView>
@@ -137,6 +147,10 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                 latitudeDelta: 0.01,
                 longitudeDelta: 0.01,
               }}
+              scrollEnabled={false}
+              zoomEnabled={true}
+              rotateEnabled={false}
+              pitchEnabled={false}
             >
               <Marker
                 coordinate={{

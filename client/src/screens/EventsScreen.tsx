@@ -34,6 +34,7 @@ const Events: React.FC<Props> = ({ navigation }) => {
           const response = await axiosInstance.get('/events', {
             headers: { Authorization: `Bearer ${user.token}` }
           });
+
           setEvents(response.data);
           setFilteredEvents(response.data);
           setLoading(false);
@@ -64,8 +65,16 @@ const Events: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
+    const today = new Date()
+    const oneDayAfter = new Date()
+    oneDayAfter.setDate(today.getDate() + 1)
+    const twoDayAfter = new Date()
+    twoDayAfter.setDate(today.getDate() + 2)
+   
     const filtered = events.filter(event => event.name.toLowerCase().includes(searchText.toLowerCase()));
-    setFilteredEvents(filtered);
+    const newFilter = filtered.filter(event => new Date(event.date) > twoDayAfter)
+    
+    setFilteredEvents(newFilter);
   }, [searchText, events]);
 
   const onRefresh = async () => {
