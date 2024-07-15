@@ -105,8 +105,7 @@ class EventController {
                 notification: {
                   eventId: event._id,
                   message: `Can you attend ${event.name} at ${date}?`
-                }git add .
-                
+                }
               }
             }
           );
@@ -116,6 +115,43 @@ class EventController {
       console.log(`Player(s) with ID(s) ${id} have been notified.`);
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  static async unableToJoin (req, res,next) {
+    try {
+      const {_id} = req.user
+      const {eventId} = req.params
+      const userId = new ObjectId(_id)
+      const db = await getDb()
+      const user = await db.collection("users").findOne({_id: userId})
+      if (!user) {
+        return res.status(404).json({message: "Id not found"})
+      }
+      const index = user.notification.findIndex(obj => obj._id === new ObjectId(eventId))
+      user.notification.splice(index)
+      const updateNotif = await db.collection("users").updateOne(
+        {_id: new ObjectId(eventId)},
+        {$set: {
+          notification: user.notification
+        }}
+      )
+
+      const event = await db.collection("events").findOne({_id: new ObjectId(eventId)})
+      if (!event) {
+        return res.status(404).json({message: "Id not found"})
+      }
+      const playerIndex = event.player.findIndex(obj => obj._id === userId)
+      event.player.splice(playerIndex)
+      const updateEvent = await db.collection("ecents").updateOne(
+        {_id: new ObjectId(eventId)},
+        {$set: {
+          player: event.player
+        }}
+      )
+      res.status(201).json({message: 'succesfully updated notification and event player'})
+    } catch (error) {
+      res.status(400).json(error)
     }
   }
 }

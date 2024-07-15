@@ -10,6 +10,7 @@ router.get('/events', auth, EventController.getEvents);
 router.get('/event/:eventId', auth, EventController.getEvent);
 router.post('/event', auth, upload.single('imageLocation'), EventController.createEvent);
 router.post('/event/:eventId/join', auth, EventController.joinEvent);
+router.delete('/event/:eventId/', auth, EventController.unableToJoin)
 router.delete('/event/:eventId/:userId', auth, EventController)
 
 module.exports = router;
