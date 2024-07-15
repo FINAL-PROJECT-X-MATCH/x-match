@@ -61,15 +61,15 @@ const ListChatScreen: React.FC = () => {
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'football':
-        return <Ionicons name="football" size={24} color="#4F46E5" style={tw`mr-4`} />;
+        return <Ionicons name="football" size={24} color="rgb(249 115 22)" style={tw`mr-4`} />;
       case 'futsal':
-        return <MaterialCommunityIcons name="soccer" size={24} color="#4F46E5" style={tw`mr-4`} />;
+        return <MaterialCommunityIcons name="soccer" size={24} color="rgb(249 115 22)" style={tw`mr-4`} />;
       case 'gym':
-        return <MaterialCommunityIcons name="dumbbell" size={24} color="#4F46E5" style={tw`mr-4`} />;
+        return <MaterialCommunityIcons name="dumbbell" size={24} color="rgb(249 115 22)" style={tw`mr-4`} />;
       case 'basketball':
-        return <MaterialCommunityIcons name="basketball" size={24} color="#4F46E5" style={tw`mr-4`} />;
+        return <MaterialCommunityIcons name="basketball" size={24} color="rgb(249 115 22)" style={tw`mr-4`} />;
       default:
-        return <MaterialIcons name="sports" size={24} color="#4F46E5" style={tw`mr-4`} />;
+        return <MaterialIcons name="sports" size={24} color="rgb(249 115 22)" style={tw`mr-4`} />;
     }
   };
 
@@ -79,7 +79,7 @@ const ListChatScreen: React.FC = () => {
       style={tw`mb-4 p-4 bg-white rounded-lg shadow-md`}
     >
       <LinearGradient
-        colors={['#e0eafc', '#cfdef3']}
+        colors={['rgb(255 237 213)', 'rgb(255 247 237)']}
         style={tw`rounded-lg p-4 flex-row items-center`}
       >
         {getCategoryIcon(item.category)}
@@ -100,12 +100,12 @@ const ListChatScreen: React.FC = () => {
   );
 
   if (loading) {
-    return <ActivityIndicator style={tw`flex-1`} size="large" color="#4F46E5" />;
+    return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(249 115 22)" />;
   }
 
   return (
     <View style={tw`flex-1 bg-gray-50`}>
-      <LinearGradient colors={['#4F46E5', '#818CF8']} style={tw`pt-12 pb-6 px-4 rounded-b-3xl`}>
+      <LinearGradient colors={[ 'rgb(234 88 12)','rgb(249 115 22)']} style={tw`pt-12 pb-6 px-4 rounded-b-3xl`}>
         <Text style={tw`text-3xl font-bold text-white text-center`}>My Chat Groups</Text>
       </LinearGradient>
 
@@ -118,7 +118,7 @@ const ListChatScreen: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#4F46E5']}
+            colors={['rgb(249 115 22)']}
           />
         }
         showsVerticalScrollIndicator={false}

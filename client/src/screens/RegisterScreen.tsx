@@ -39,7 +39,7 @@ const RegisterScreen = ({ navigation }: Props) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
-      <LinearGradient colors={['#4F46E5', '#6a5acd', '#ffffff']} style={tw`flex-1`}>
+      <LinearGradient colors={['rgb(234 88 12)', 'rgb(249 115 22)', 'rgb(253 186 116)']} style={tw`flex-1`}>
         <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
           <View style={tw`items-center mb-10`}>
             <Image source={require('../../assets/LogoX-Match.png')} style={tw`w-40 h-40 mb-6`} />
@@ -82,7 +82,7 @@ const RegisterScreen = ({ navigation }: Props) => {
               />
             </View>
           </View>
-          <TouchableOpacity style={tw`bg-indigo-600 p-4 rounded-full mb-4 shadow-md`} onPress={handleRegister}>
+          <TouchableOpacity style={tw`bg-orange-600 p-4 rounded-full mb-4 shadow-md`} onPress={handleRegister}>
             {loading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (

@@ -44,7 +44,7 @@ const CustomTabBarButton = (props: any) => (
     {...props}
     style={tw`-mt-5 justify-center items-center`}
   >
-    <View style={tw`w-16 h-16 bg-indigo-600 rounded-full justify-center items-center shadow-lg`}>
+    <View style={tw`w-16 h-16 bg-orange-600 rounded-full justify-center items-center shadow-lg`}>
       <Image
         source={require('../../assets/LogoX-Match.png')}
         style={tw`w-12 h-12`}
@@ -58,7 +58,7 @@ const MainTabNavigator = () => {
     <Tab.Navigator
       screenOptions={{
         tabBarStyle: tw`bg-white border-t border-gray-200`,
-        tabBarActiveTintColor: 'blue',
+        tabBarActiveTintColor: 'orange',
         tabBarInactiveTintColor: 'gray',
       }}
     >

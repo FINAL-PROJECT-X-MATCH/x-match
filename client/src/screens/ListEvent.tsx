@@ -110,15 +110,15 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
   const getCategoryIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'football':
-        return <Ionicons name="football" size={16} color="#4F46E5" />;
+        return <Ionicons name="football" size={16} color="rgb(249 115 22)" />;
       case 'futsal':
-        return <MaterialCommunityIcons name="soccer" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="soccer" size={16} color="rgb(249 115 22)" />;
       case 'gym':
-        return <MaterialCommunityIcons name="dumbbell" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="dumbbell" size={16} color="rgb(249 115 22)" />;
       case 'basketball':
-        return <MaterialCommunityIcons name="basketball" size={16} color="#4F46E5" />;
+        return <MaterialCommunityIcons name="basketball" size={16} color="rgb(249 115 22)" />;
       default:
-        return <MaterialIcons name="sports" size={16} color="#4F46E5" />;
+        return <MaterialIcons name="sports" size={16} color="rgb(249 115 22)" />;
     }
   };
 
@@ -157,7 +157,7 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
           style={tw`absolute top-0 left-0 right-0 h-16`}
         />
         <View style={tw`absolute top-2 right-2 bg-white rounded-full p-2`}>
-          <FontAwesome name="heart-o" size={20} color="#4F46E5" />
+          <FontAwesome name="heart-o" size={20} color="rgb(249 115 22)" />
         </View>
         <View style={tw`p-3`}>
           <Text style={tw`text-base font-bold mb-1 text-black`}>{item.name}</Text>
@@ -167,17 +167,17 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
           </View>
           <View style={tw`flex-row items-center justify-between`}>
             <View style={tw`flex-row items-center`}>
-              <Ionicons name="calendar-outline" size={14} color="#4F46E5" />
+              <Ionicons name="calendar-outline" size={14} color="rgb(249 115 22)" />
               <Text style={tw`ml-1 text-xs text-gray-500`}>{formatDate(item.date)}</Text>
             </View>
             <View style={tw`flex-row items-center`}>
-              <FontAwesome name="users" size={14} color="#4F46E5" />
-              <Text style={tw`ml-1 text-xs text-[#4F46E5]`}>{`${item.player.length}/${item.quota}`}</Text>
+              <FontAwesome name="users" size={14} color="rgb(249 115 22)" />
+              <Text style={tw`ml-1 text-xs text-[rgb(249 115 22)]`}>{`${item.player.length}/${item.quota}`}</Text>
             </View>
           </View>
           {location && (
             <View style={tw`flex-row items-center justify-start mt-2`}>
-              <Ionicons name="location-outline" size={14} color="#4F46E5" />
+              <Ionicons name="location-outline" size={14} color="rgb(249 115 22)" />
               <Text style={tw`ml-1 text-xs text-gray-500`}>{`${getDistance(item)} km`}</Text>
             </View>
           )}
@@ -187,12 +187,12 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
   );
 
   if (loading) {
-    return <ActivityIndicator style={tw`flex-1`} size="large" color="#4F46E5" />;
+    return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(249 115 22)" />;
   }
 
   return (
     <View style={tw`flex-1 bg-gray-50`}>
-      <LinearGradient colors={['#4F46E5', '#818CF8']} style={tw`pt-12 pb-6 px-4 rounded-b-3xl`}>
+      <LinearGradient colors={['rgb(249 115 22)', 'rgb(234 88 12)']} style={tw`pt-12 pb-6 px-4 rounded-b-3xl`}>
         <View style={tw`flex-row items-center justify-between`}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2`}>
             <Ionicons name="arrow-back" size={24} color="white" />
@@ -201,13 +201,13 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
           <View style={tw`p-2`}></View>
         </View>
         <View style={tw`flex-row justify-between mt-4`}>
-          <TouchableOpacity onPress={() => setSortOption('newest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'newest' ? 'bg-[#4F46E5]' : 'bg-gray-100'}`}>
+          <TouchableOpacity onPress={() => setSortOption('newest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'newest' ? 'bg-orange-500' : 'bg-gray-100'}`}>
             <Text style={tw`${sortOption === 'newest' ? 'text-white' : 'text-black'}`}>Newest</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSortOption('oldest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'oldest' ? 'bg-[#4F46E5]' : 'bg-gray-100'}`}>
+          <TouchableOpacity onPress={() => setSortOption('oldest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'oldest' ? 'bg-orange-500' : 'bg-gray-100'}`}>
             <Text style={tw`${sortOption === 'oldest' ? 'text-white' : 'text-black'}`}>Oldest</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSortOption('nearest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'nearest' ? 'bg-[#4F46E5]' : 'bg-gray-100'}`}>
+          <TouchableOpacity onPress={() => setSortOption('nearest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'nearest' ? 'bg-orange-500' : 'bg-gray-100'}`}>
             <Text style={tw`${sortOption === 'nearest' ? 'text-white' : 'text-black'}`}>Nearest</Text>
           </TouchableOpacity>
         </View>
@@ -222,7 +222,7 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#4F46E5']}
+            colors={['rgb(249 115 22)']}
           />
         }
         ListHeaderComponent={() => (

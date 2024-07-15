@@ -96,7 +96,7 @@ const UpdateProfile: React.FC = () => {
   return (
     <View style={tw`flex-1 bg-white`}>
       <LinearGradient
-        colors={['#4F46E5', '#6a5acd']}
+        colors={['rgb(249 115 22)', 'rgb(234 88 12)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0.3 }}
         style={styles.gradient}
@@ -104,16 +104,16 @@ const UpdateProfile: React.FC = () => {
       <ScrollView contentContainerStyle={tw`flex-1 justify-center items-center p-5`}>
         {loading && (
           <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#4F46E5" />
+            <ActivityIndicator size="large" color="rgb(249 115 22)" />
             <Text style={tw`mt-2 text-white`}>Updating...</Text>
           </View>
         )}
         <View style={tw`w-full bg-white p-5 rounded-3xl shadow-lg`}>
           <View style={tw`flex-row items-center mb-4`}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={tw`mr-2`}>
-              <Ionicons name="arrow-back" size={24} color="#4F46E5" />
+              <Ionicons name="arrow-back" size={24} color="rgb(249 115 22)" />
             </TouchableOpacity>
-            <Text style={tw`text-3xl font-bold text-center flex-1 text-blue-600`}>Update Profile</Text>
+            <Text style={tw`text-3xl font-bold text-center flex-1 text-orange-500`}>Update Profile</Text>
           </View>
           <View style={tw`items-center mb-6`}>
             {image ? (
@@ -121,20 +121,20 @@ const UpdateProfile: React.FC = () => {
             ) : (
               <Ionicons name="person-circle-outline" size={120} color="gray" />
             )}
-            <TouchableOpacity style={[tw`p-3 rounded-full mb-4 flex-row items-center`, { backgroundColor: '#4F46E5' }]} onPress={pickImage}>
+            <TouchableOpacity style={[tw`p-3 rounded-full mb-4 flex-row items-center`, { backgroundColor: 'rgb(249 115 22)' }]} onPress={pickImage}>
               <Ionicons name="image" size={24} color="white" style={tw`mr-2`} />
               <Text style={tw`text-white text-center text-lg`}>Pick an Image</Text>
             </TouchableOpacity>
             {uploading && (
               <View style={tw`mt-2`}>
-                <ActivityIndicator size="small" color="#4F46E5" />
+                <ActivityIndicator size="small" color="rgb(249 115 22)" />
                 <Text style={tw`mt-2 text-center`}>Uploading...</Text>
               </View>
             )}
           </View>
           <View style={tw`mb-4`}>
-            <View style={[tw`flex-row items-center border p-3 rounded-xl mb-4`, { borderColor: '#4F46E5' }]}>
-              <Ionicons name="person" size={20} color="#4F46E5" style={tw`mr-2`} />
+            <View style={[tw`flex-row items-center border p-3 rounded-xl mb-4`, { borderColor: 'rgb(249 115 22)' }]}>
+              <Ionicons name="person" size={20} color="rgb(249 115 22)" style={tw`mr-2`} />
               <TextInput
                 style={tw`flex-1 text-lg`}
                 placeholder="Username"
@@ -142,8 +142,8 @@ const UpdateProfile: React.FC = () => {
                 onChangeText={setUsername}
               />
             </View>
-            <View style={[tw`flex-row items-center border p-3 rounded-xl`, { borderColor: '#4F46E5' }]}>
-              <Ionicons name="mail" size={20} color="#4F46E5" style={tw`mr-2`} />
+            <View style={[tw`flex-row items-center border p-3 rounded-xl`, { borderColor: 'rgb(249 115 22)' }]}>
+              <Ionicons name="mail" size={20} color="rgb(249 115 22)" style={tw`mr-2`} />
               <TextInput
                 style={tw`flex-1 text-lg`}
                 placeholder="Email"
@@ -153,7 +153,7 @@ const UpdateProfile: React.FC = () => {
               />
             </View>
           </View>
-          <TouchableOpacity style={[tw`p-4 rounded-full mb-4 flex-row justify-center items-center`, { backgroundColor: '#4F46E5' }]} onPress={updateProfile}>
+          <TouchableOpacity style={[tw`p-4 rounded-full mb-4 flex-row justify-center items-center`, { backgroundColor: 'rgb(249 115 22)' }]} onPress={updateProfile}>
             {loading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
@@ -163,7 +163,7 @@ const UpdateProfile: React.FC = () => {
               </>
             )}
           </TouchableOpacity>
-          <TouchableOpacity style={[tw`p-4 rounded-full flex-row justify-center items-center`, { backgroundColor: '#ff0000' }]} onPress={logout}>
+          <TouchableOpacity style={[tw`p-4 rounded-full flex-row justify-center items-center`, { backgroundColor: 'rgb(251 191 36)' }]} onPress={logout}>
             <Ionicons name="log-out" size={24} color="white" style={tw`mr-2`} />
             <Text style={tw`text-white text-center text-lg`}>Logout</Text>
           </TouchableOpacity>

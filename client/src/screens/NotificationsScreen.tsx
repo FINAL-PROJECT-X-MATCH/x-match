@@ -36,7 +36,7 @@ const NotificationsScreen: React.FC = () => {
   };
 
   if (loading) {
-    return <ActivityIndicator style={tw`flex-1`} size="large" color="#4F46E5" />;
+    return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(234 88 12)" />;
   }
 
   return (
@@ -53,7 +53,7 @@ const NotificationsScreen: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#4F46E5']}
+            colors={['rgb(234 88 12)']}
           />
         }
         showsVerticalScrollIndicator={false}
