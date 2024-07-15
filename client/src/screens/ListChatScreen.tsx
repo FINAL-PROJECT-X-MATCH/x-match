@@ -36,8 +36,9 @@ const ListChatScreen: React.FC = () => {
           const latestMessage = messagesResponse.data.length > 0 ? messagesResponse.data[0] : null;
           return { ...event, latestMessage };
         }));
+        const filterListChat = eventsWithMessages.filter(list => new Date(list.date) > new Date())
 
-        setEvents(eventsWithMessages);
+        setEvents(filterListChat);
         setLoading(false);
       } catch (error) {
         console.error(error);
