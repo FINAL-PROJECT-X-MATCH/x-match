@@ -43,7 +43,8 @@ io.on('connection', (socket) => {
 });
 
 timer.schedule('0 6 * * *', () => {
-// EventController.checkEvent()
+EventController.checkEvent()
+EventController.checkNotification()
 UserController.checkStatus()
 }, {
   scheduled: true,

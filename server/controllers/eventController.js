@@ -104,7 +104,8 @@ class EventController {
               $push: {
                 notification: {
                   eventId: event._id,
-                  message: `Can you attend ${event.name} at ${date}?`
+                  message: `Can you attend ${event.name} at ${date}?`,
+                  createdAt: new Date().toISOString()
                 }
               }
             }
@@ -118,38 +119,74 @@ class EventController {
     }
   }
 
-  static async unableToJoin (req, res,next) {
+  static async checkNotification() {
     try {
-      const {_id} = req.user
-      const {eventId} = req.params
+      const today = new Date()
+      const yesterday = new Date()
+      yesterday.setDate(today.getDate() - 1)
+      const tommorow = new Date()
+      tommorow.setDate(today.getDate() + 1)
+      const db = await getDb()
+      const users = await db.collection("users").find().toArray()
+      users.forEach(user => {
+        const notifications = user.notification
+        notifications.forEach(async (notification) => {
+          if (notification.date === yesterday || notification.date > yesterday) {
+            const banUser = await db.collection("users").findOne(
+              { _id: user._id },
+              {
+                $set: {
+                  status: {
+                    ban: true,
+                    duration: tommorow.toISOString()
+                  }
+                }
+              }
+            )
+          }
+        })
+      })
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  static async unableToJoin(req, res, next) {
+    try {
+      const { _id } = req.user
+      const { eventId } = req.params
       const userId = new ObjectId(_id)
       const db = await getDb()
-      const user = await db.collection("users").findOne({_id: userId})
+      const user = await db.collection("users").findOne({ _id: userId })
       if (!user) {
-        return res.status(404).json({message: "Id not found"})
+        return res.status(404).json({ message: "Id not found" })
       }
       const index = user.notification.findIndex(obj => obj._id === new ObjectId(eventId))
       user.notification.splice(index)
       const updateNotif = await db.collection("users").updateOne(
-        {_id: new ObjectId(eventId)},
-        {$set: {
-          notification: user.notification
-        }}
+        { _id: new ObjectId(eventId) },
+        {
+          $set: {
+            notification: user.notification
+          }
+        }
       )
 
-      const event = await db.collection("events").findOne({_id: new ObjectId(eventId)})
+      const event = await db.collection("events").findOne({ _id: new ObjectId(eventId) })
       if (!event) {
-        return res.status(404).json({message: "Id not found"})
+        return res.status(404).json({ message: "Id not found" })
       }
       const playerIndex = event.player.findIndex(obj => obj._id === userId)
       event.player.splice(playerIndex)
       const updateEvent = await db.collection("ecents").updateOne(
-        {_id: new ObjectId(eventId)},
-        {$set: {
-          player: event.player
-        }}
+        { _id: new ObjectId(eventId) },
+        {
+          $set: {
+            player: event.player
+          }
+        }
       )
-      res.status(201).json({message: 'succesfully updated notification and event player'})
+      res.status(201).json({ message: 'succesfully updated notification and event player' })
     } catch (error) {
       res.status(400).json(error)
     }
