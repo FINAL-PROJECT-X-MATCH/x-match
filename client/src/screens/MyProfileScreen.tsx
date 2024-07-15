@@ -47,7 +47,7 @@ const MyProfileScreen: React.FC = () => {
       ]);
       setUserProfile(userResponse.data);
       
-      // Separate upcoming and past events
+      
       const now = new Date();
       const upcoming = eventsResponse.data.filter((event: Event) => new Date(event.date) > now);
       const past = eventsResponse.data.filter((event: Event) => new Date(event.date) <= now);
@@ -71,17 +71,6 @@ const MyProfileScreen: React.FC = () => {
     navigation.navigate('EventDetail', { eventId: event._id });
   };
 
-  const handleLogout = async () => {
-    if (user) {
-      try {
-        await logout();
-      } catch (error) {
-        console.error('Error logging out:', error);
-      }
-    } else {
-      console.error('No user to log out');
-    }
-  };
 
   const handleUpdateProfile = () => {
     navigation.navigate('UpdateProfile');
@@ -115,7 +104,7 @@ const MyProfileScreen: React.FC = () => {
         }
       >
         <LinearGradient
-          colors={['#4F46E5', '#7C3AED']}
+          colors={['rgb(249 115 22)', 'rgb(234 88 12)']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={tw`pt-12 pb-24 px-4`}
@@ -129,12 +118,12 @@ const MyProfileScreen: React.FC = () => {
             {userProfile?.avatar ? (
               <Image source={{ uri: userProfile.avatar }} style={[tw`w-32 h-32 rounded-full border-4 border-white`, styles.avatarShadow]} />
             ) : (
-              <View style={[tw`w-32 h-32 rounded-full bg-indigo-300 items-center justify-center border-4 border-white`, styles.avatarShadow]}>
-                <Ionicons name="person" size={64} color="#4F46E5" />
+              <View style={[tw`w-32 h-32 rounded-full bg-orange-300 items-center justify-center border-4 border-white`, styles.avatarShadow]}>
+                <Ionicons name="person" size={64} color="rgb(249 115 22)" />
               </View>
             )}
             <Text style={tw`mt-4 text-3xl font-bold text-white`}>{userProfile?.username}</Text>
-            <Text style={tw`mt-1 text-base text-indigo-100`}>{userProfile?.email}</Text>
+            <Text style={tw`mt-1 text-base text-orange-100`}>{userProfile?.email}</Text>
           </View>
         </LinearGradient>
 
@@ -142,11 +131,11 @@ const MyProfileScreen: React.FC = () => {
           <Text style={tw`text-xl font-bold mb-4 text-gray-800`}>Your Stats</Text>
           <View style={tw`flex-row justify-between`}>
             <View style={tw`items-center`}>
-              <Text style={tw`text-2xl font-bold text-indigo-600`}>{upcomingEvents.length}</Text>
+              <Text style={tw`text-2xl font-bold text-orange-600`}>{upcomingEvents.length}</Text>
               <Text style={tw`text-sm text-gray-600`}>Upcoming</Text>
             </View>
             <View style={tw`items-center`}>
-              <Text style={tw`text-2xl font-bold text-indigo-600`}>{pastEvents.length}</Text>
+              <Text style={tw`text-2xl font-bold text-orange-600`}>{pastEvents.length}</Text>
               <Text style={tw`text-sm text-gray-600`}>History</Text>
             </View>
           </View>
@@ -182,12 +171,7 @@ const MyProfileScreen: React.FC = () => {
           </ScrollView>
         </View>
 
-        <TouchableOpacity
-          style={[tw`mx-4 my-8 bg-indigo-600 py-4 px-6 rounded-xl items-center`, styles.logoutButton]}
-          onPress={handleLogout}
-        >
-          <Text style={tw`text-white font-bold text-lg`}>Logout</Text>
-        </TouchableOpacity>
+      
       </ScrollView>
   );
 };
@@ -214,7 +198,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   logoutButton: {
-    shadowColor: "#4F46E5",
+    shadowColor: "rgb(249 115 22)",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

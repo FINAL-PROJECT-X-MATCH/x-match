@@ -6,6 +6,9 @@ const chatRoutes = require('./routes/chatRoutes');
 const http = require('http');
 const socketIo = require('socket.io');
 const cors = require("cors");
+const timer = require('node-cron');
+const EventController = require('./controllers/eventController');
+const UserController = require('./controllers/userController');
 
 require('dotenv').config();
 
@@ -38,6 +41,15 @@ io.on('connection', (socket) => {
     console.log('Client disconnected');
   });
 });
+
+timer.schedule('0 6 * * *', () => {
+  EventController.checkEvent()
+  EventController.checkNotification()
+  UserController.checkStatus()
+  }, {
+    scheduled: true,
+    timezone: "Asia/Jakarta"
+  })
 
 const startServer = async () => {
   try {
