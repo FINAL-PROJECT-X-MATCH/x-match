@@ -1,6 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  View, TextInput, FlatList, Text, TouchableOpacity, KeyboardAvoidingView, Platform, Image, Modal, TouchableWithoutFeedback, ActivityIndicator
+  View,
+  TextInput,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+  Modal,
+  TouchableWithoutFeedback,
+  ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { useTheme, Provider as PaperProvider, Appbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -13,6 +24,8 @@ import tw from 'twrnc';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 
 const socketUrl = 'https://18bf-36-68-222-140.ngrok-free.app';
 
@@ -29,6 +42,7 @@ interface Message {
   message: string;
   username: string;
   image?: string;
+  createdAt: string;
 }
 
 const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
@@ -41,6 +55,8 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
   const { user } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const theme = useTheme();
+  const flatListRef = useRef<FlatList>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!user) {
@@ -56,9 +72,16 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
 
     newSocket.on('message', (newMessage: Message) => {
       setMessages((prevMessages) => [...prevMessages, newMessage]);
+      scrollToBottom();
     });
 
     newSocket.emit('join', { eventId, userId: user.id });
+
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
 
     return () => {
       newSocket.off('message');
@@ -73,6 +96,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
         headers: { Authorization: `Bearer ${user?.token}` },
       });
       setMessages(response.data);
+      scrollToBottom();
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -82,13 +106,19 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
     fetchMessages();
   }, [eventId]);
 
+  const scrollToBottom = () => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  };
+
   const sendMessage = async () => {
-    if (!socket || !user || isUploading) return;
+    if (!socket || !user || isUploading || (!message.trim() && !imageUri)) return;
 
     setIsUploading(true);
     const formData = new FormData();
     formData.append('eventId', eventId);
-    formData.append('message', message);
+    formData.append('message', message.trim());
     if (imageUri) {
       const filename = imageUri.split('/').pop();
       const match = /\.(\w+)$/.exec(filename);
@@ -104,6 +134,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
       socket.emit('sendMessage', newMessage);
       setMessage('');
       setImageUri(null);
+      scrollToBottom();
     } catch (error: any) {
       console.error('Error sending message:', error.response ? error.response.data : error.message);
     } finally {
@@ -133,7 +164,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
 
     if (!result.canceled && result.assets) {
       const imageUri = result.assets[0].uri;
-      setImageUri(imageUri); // Set the image URI to preview the image
+      setImageUri(imageUri);
     }
   };
 
@@ -165,99 +196,105 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
     setSelectedImage(null);
   };
 
-  const renderItem = ({ item }: { item: Message }) => (
-    <View
-      style={[
-        tw`mb-2 flex-row items-end`,
-        item.username === user.username ? tw`justify-end` : tw`justify-start`,
-      ]}
-    >
-      <View
+  const renderItem = ({ item }: { item: Message }) => {
+    const isCurrentUser = item.username === user?.username;
+    return (
+      <Animated.View
         style={[
-          tw`max-w-[80%] p-2 rounded-xl shadow-md`,
-          item.username === user.username ? tw`bg-[#4F46E5]` : tw`bg-white`,
+          tw`mb-2 flex-row items-end`,
+          isCurrentUser ? tw`justify-end` : tw`justify-start`,
+          { opacity: fadeAnim },
         ]}
+        key={item._id}
       >
-        <Text style={tw`font-bold ${item.username === user.username ? 'text-right' : 'text-left'}`}>
-          {item.username}
-        </Text>
-        {item.image ? (
-          <TouchableOpacity onPress={() => handleImagePress(item.image)}>
-            <Image source={{ uri: item.image }} style={tw`w-60 h-60 rounded-lg mt-2`} resizeMode="contain" />
-          </TouchableOpacity>
-        ) : (
-          <Text style={tw`${item.username === user.username ? 'text-right' : 'text-left'}`}>
-            {item.message}
+        <LinearGradient
+          colors={isCurrentUser ? ['#4F46E5', '#3730A3'] : ['#F3F4F6', '#E5E7EB']}
+          style={[
+            tw`max-w-[80%] p-3 rounded-2xl shadow-md`,
+            isCurrentUser ? tw`rounded-br-none` : tw`rounded-bl-none`,
+          ]}
+        >
+          <Text style={tw`font-bold ${isCurrentUser ? 'text-white' : 'text-gray-800'}`}>
+            {item.username}
           </Text>
-        )}
-      </View>
-    </View>
-  );
+          {item.image ? (
+            <TouchableOpacity onPress={() => handleImagePress(item.image)}>
+              <Image source={{ uri: item.image }} style={tw`w-60 h-60 rounded-lg mt-2`} resizeMode="cover" />
+            </TouchableOpacity>
+          ) : (
+            <Text style={tw`${isCurrentUser ? 'text-white' : 'text-gray-800'} mt-1`}>
+              {item.message}
+            </Text>
+          )}
+        </LinearGradient>
+      </Animated.View>
+    );
+  };
 
   return (
     <PaperProvider>
-      <KeyboardAvoidingView
-        style={tw`flex-1 bg-white`}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={80}
-      >
-        <View style={tw`flex-1`}>
-          <Appbar.Header style={tw`bg-white shadow-md`}>
-            <Appbar.BackAction onPress={() => navigation.goBack()} />
-            <Appbar.Content title="Chat Group" />
+      <LinearGradient colors={['#F3F4F6', '#E5E7EB']} style={tw`flex-1`}>
+        <KeyboardAvoidingView
+          style={tw`flex-1`}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={80}
+        >
+          <Appbar.Header style={tw`bg-transparent shadow-none`}>
+            <Appbar.BackAction onPress={() => navigation.goBack()} color="#4F46E5" />
+            <Appbar.Content title="Chat Group" titleStyle={tw`text-gray-800 font-bold`} />
           </Appbar.Header>
           <FlatList
+            ref={flatListRef}
             data={messages}
             keyExtractor={(item) => item._id}
             renderItem={renderItem}
             contentContainerStyle={tw`p-4`}
+            onContentSizeChange={scrollToBottom}
+            onLayout={scrollToBottom}
           />
           {imageUri && (
-            <View style={tw`p-2 bg-white border-t border-gray-200 flex-row justify-center`}>
+            <BlurView intensity={100} tint="light" style={tw`p-2 border-t border-gray-200 flex-row justify-center`}>
               <Image source={{ uri: imageUri }} style={tw`w-60 h-60 rounded-lg`} />
-            </View>
+            </BlurView>
           )}
           {isUploading && (
-            <View style={tw`p-2 bg-white border-t border-gray-200 flex-row justify-center`}>
+            <BlurView intensity={100} tint="light" style={tw`p-2 border-t border-gray-200 flex-row justify-center`}>
               <ActivityIndicator size="large" color="#4F46E5" />
-            </View>
+            </BlurView>
           )}
-          <View style={tw`p-2 bg-white border-t border-gray-200`}>
-            <View style={tw`flex-row items-center p-2 bg-gray-100 rounded-full shadow-sm`}>
+          <BlurView intensity={100} tint="light" style={tw`p-2 border-t border-gray-200`}>
+            <View style={tw`flex-row items-center p-2 bg-white rounded-full shadow-md`}>
               <TouchableOpacity onPress={selectImage} style={tw`ml-2 mr-2`}>
-                <MaterialCommunityIcons name="image" size={30} color="#4F46E5" />
+                <MaterialCommunityIcons name="image" size={24} color="#4F46E5" />
               </TouchableOpacity>
               <TouchableOpacity onPress={takePhoto} style={tw`ml-2 mr-2`}>
-                <MaterialCommunityIcons name="camera" size={30} color="#4F46E5" />
+                <MaterialCommunityIcons name="camera" size={24} color="#4F46E5" />
               </TouchableOpacity>
               <View style={tw`flex-1 h-10`}>
                 <TextInput
-                  style={[
-                    tw`h-full rounded-full px-4`,
-                    { backgroundColor: 'white', color: 'black' },
-                  ]}
+                  style={tw`h-full rounded-full px-4 bg-gray-100 text-gray-800`}
                   placeholder="Type a message"
-                  placeholderTextColor={theme.colors.placeholder}
+                  placeholderTextColor="#9CA3AF"
                   value={message}
                   onChangeText={setMessage}
                 />
               </View>
-              <TouchableOpacity onPress={sendMessage} style={tw`ml-2`}>
-                <MaterialCommunityIcons name="send-circle" size={40} color="#4F46E5" />
+              <TouchableOpacity onPress={sendMessage} style={tw`ml-2 bg-[#4F46E5] rounded-full p-2`}>
+                <MaterialCommunityIcons name="send" size={24} color="white" />
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </BlurView>
+        </KeyboardAvoidingView>
         <Modal visible={!!selectedImage} transparent={true}>
           <TouchableWithoutFeedback onPress={closeImageModal}>
-            <View style={tw`flex-1 bg-black bg-opacity-80 justify-center items-center`}>
+            <BlurView intensity={100} tint="dark" style={tw`flex-1 justify-center items-center`}>
               {selectedImage && (
-                <Image source={{ uri: selectedImage }} style={tw`w-80 h-80`} resizeMode="contain" />
+                <Image source={{ uri: selectedImage }} style={tw`w-full h-80`} resizeMode="contain" />
               )}
-            </View>
+            </BlurView>
           </TouchableWithoutFeedback>
         </Modal>
-      </KeyboardAvoidingView>
+      </LinearGradient>
     </PaperProvider>
   );
 };

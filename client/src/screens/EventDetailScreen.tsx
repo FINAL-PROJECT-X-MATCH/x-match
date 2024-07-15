@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Alert, ActivityIndicator, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { useAuth } from '../context/AuthContext';
@@ -11,8 +11,8 @@ import tw from 'twrnc';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { SharedElement } from 'react-navigation-shared-element';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackScreenProps } from '@react-navigation/stack';
+import Toast from 'react-native-toast-message';
 
 type RootStackParamList = {
   EventDetail: { eventId: string };
@@ -69,11 +69,19 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
         await axiosInstance.post(`/event/${eventId}/join`, {}, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
-        Alert.alert('Success', 'You have successfully joined the event.');
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'You have successfully joined the event.',
+        });
         setIsJoined(true);
       } catch (error) {
         console.error(error);
-        Alert.alert('Error', 'Failed to join the event.');
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: 'Failed to join the event.',
+        });
       }
     }
   };
@@ -87,7 +95,12 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
   if (!event) return <ActivityIndicator style={tw`flex-1`} size="large" color="#4F46E5" />;
 
   return (
-    
+    <View style={tw`flex-1`}>
+      <View style={tw`absolute top-10 left-5 z-10`}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={tw`bg-white p-2 rounded-full shadow`}>
+          <Ionicons name="arrow-back" size={24} color="#4F46E5" />
+        </TouchableOpacity>
+      </View>
       <ScrollView contentContainerStyle={tw`pb-10`}>
         <SharedElement id={`event.${eventId}.image`}>
           <Image source={{ uri: event.imageLocation }} style={tw`w-full h-80`} />
@@ -97,12 +110,12 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           style={tw`absolute left-0 right-0 top-60 h-20`}
         />
         <View style={tw`px-6 -mt-10`}>
-          <BlurView intensity={80} tint="light" style={tw`rounded-3xl overflow-hidden`}>
+          <BlurView intensity={80} tint="light" style={tw`rounded-3xl overflow-hidden mb-6`}>
             <View style={tw`p-6`}>
               <Text style={tw`text-3xl font-bold text-gray-800 mb-2`}>{event.name}</Text>
               <View style={tw`flex-row items-center mb-4`}>
                 <Ionicons name="person-circle" size={24} color="#4F46E5" />
-                <Text style={tw`text-base text-gray-600 ml-2`}>Diposting oleh {event.authorUsername}</Text>
+                <Text style={tw`text-base text-gray-600 ml-2`}>Posted by {event.authorUsername}</Text>
               </View>
               <View style={tw`flex-row items-center mb-4 bg-gray-100 p-4 rounded-xl`}>
                 <Ionicons name="calendar" size={20} color="#4F46E5" />
@@ -146,22 +159,18 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
             </View>
           </BlurView>
 
+          {isJoined && (
+            <View style={styles.joinedMessageContainer}>
+              <Ionicons name="checkmark-circle" size={32} color="#4F46E5" />
+              <Text style={styles.joinedMessageText}>You have joined this event</Text>
+            </View>
+          )}
+
           <Text style={tw`text-xl font-bold text-center text-gray-800 mb-6`}>
-            {`Peserta: ${event.player.length}/${event.quota}`}
+            {`Participant: ${event.player.length}/${event.quota}`}
           </Text>
 
-          {isJoined ? (
-            <View style={tw`items-center mb-10`}>
-              <Ionicons name="checkmark-circle" size={32} color="#4F46E5" />
-              <Text style={tw`text-lg text-indigo-600 mt-2 mb-4`}>Anda telah bergabung dengan acara ini</Text>
-              <TouchableOpacity
-                style={tw`bg-indigo-600 py-4 px-8 rounded-full shadow-lg`}
-                onPress={() => navigation.navigate('Chat', { eventId })}
-              >
-                <Text style={tw`text-white font-bold text-lg text-center`}>Pergi ke Obrolan</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
+          {!isJoined && (
             <TouchableOpacity onPress={joinEvent}>
               <LinearGradient
                 colors={['#4F46E5', '#5753E8']}
@@ -169,14 +178,54 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                 end={{ x: 1, y: 0 }}
                 style={tw`py-4 px-8 rounded-full shadow-lg`}
               >
-                <Text style={tw`text-white font-bold text-lg text-center`}>Bergabung dengan Acara</Text>
+                <Text style={tw`text-white font-bold text-lg text-center`}>Join Event</Text>
               </LinearGradient>
             </TouchableOpacity>
           )}
         </View>
       </ScrollView>
-    
+
+      {isJoined && (
+        <TouchableOpacity
+          style={[styles.chatBubble, tw`bg-indigo-600`]}
+          onPress={() => navigation.navigate('Chat', { eventId })}
+        >
+          <Ionicons name="chatbubble-ellipses" size={24} color="white" />
+        </TouchableOpacity>
+      )}
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  chatBubble: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
+  },
+  joinedMessageContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: '#E0E7FF',
+    borderRadius: 20,
+  },
+  joinedMessageText: {
+    textAlign: 'center',
+    color: '#4F46E5',
+    fontSize: 16,
+    marginTop: 5,
+  },
+});
 
 export default EventDetailScreen;

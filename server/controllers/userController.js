@@ -77,7 +77,7 @@ class UserController {
 
       if (req.file) {
         const result = await cloudinary.uploader.upload(req.file.path);
-        updateData.image = result.secure_url;
+        updateData.avatar = result.secure_url;
       }
 
       updateData.updatedAt = new Date();
@@ -168,6 +168,28 @@ class UserController {
       res.status(500).send({ error: "Internal Server Error" });
     }
   }
+
+  static async getJoinedEvents(req, res) {
+    try {
+      const db = getDb();
+      const events = await db.collection('events').find({ player: req.user._id }).toArray();
+      res.send(events);
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  }
+
+  static async getNotifications(req, res) {
+    try {
+      const db = getDb();
+      const user = await db.collection('users').findOne({ _id: new ObjectId(req.user._id) });
+      res.send(user.notification);
+    } catch (error) {
+      res.status(400).send({ message: 'Failed to get notifications', error });
+    }
+  }
+  
+
 }
 
 module.exports = UserController;

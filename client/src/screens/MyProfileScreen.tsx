@@ -47,7 +47,7 @@ const MyProfileScreen: React.FC = () => {
       ]);
       setUserProfile(userResponse.data);
       
-      // Separate upcoming and past events
+      
       const now = new Date();
       const upcoming = eventsResponse.data.filter((event: Event) => new Date(event.date) > now);
       const past = eventsResponse.data.filter((event: Event) => new Date(event.date) <= now);
@@ -71,17 +71,6 @@ const MyProfileScreen: React.FC = () => {
     navigation.navigate('EventDetail', { eventId: event._id });
   };
 
-  const handleLogout = async () => {
-    if (user) {
-      try {
-        await logout();
-      } catch (error) {
-        console.error('Error logging out:', error);
-      }
-    } else {
-      console.error('No user to log out');
-    }
-  };
 
   const handleUpdateProfile = () => {
     navigation.navigate('UpdateProfile');
@@ -182,12 +171,7 @@ const MyProfileScreen: React.FC = () => {
           </ScrollView>
         </View>
 
-        <TouchableOpacity
-          style={[tw`mx-4 my-8 bg-indigo-600 py-4 px-6 rounded-xl items-center`, styles.logoutButton]}
-          onPress={handleLogout}
-        >
-          <Text style={tw`text-white font-bold text-lg`}>Logout</Text>
-        </TouchableOpacity>
+      
       </ScrollView>
   );
 };

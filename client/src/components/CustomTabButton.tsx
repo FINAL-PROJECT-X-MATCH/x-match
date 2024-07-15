@@ -1,37 +1,28 @@
+// components/CustomTabButton.tsx
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
-import { BottomTabBarButtonProps } from '@react-navigation/bottom-tabs';
+import { TouchableOpacity, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import tw from 'twrnc';
 
-const CustomTabButton: React.FC<BottomTabBarButtonProps> = ({ children, onPress }) => (
-  <TouchableOpacity style={styles.container} onPress={onPress}>
-    <View style={styles.button}>
-      {children}
-    </View>
-  </TouchableOpacity>
-);
+interface CustomTabButtonProps {
+  label: string;
+  icon: string;
+  isFocused: boolean;
+  onPress: () => void;
+}
 
-const styles = StyleSheet.create({
-  container: {
-    top: -20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  button: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#ffffff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.5,
-    elevation: 5,
-  },
-});
+const CustomTabButton: React.FC<CustomTabButtonProps> = ({ label, icon, isFocused, onPress }) => {
+  return (
+    <TouchableOpacity
+      style={tw`items-center justify-center`}
+      onPress={onPress}
+    >
+      <View style={tw`items-center justify-center ${isFocused ? 'bg-red-600' : 'bg-white'} rounded-full w-12 h-12`}>
+        <Ionicons name={icon as any} size={24} color={isFocused ? 'white' : 'gray'} />
+      </View>
+      <Text style={tw`text-xs mt-1 ${isFocused ? 'text-red-600' : 'text-gray-500'}`}>{label}</Text>
+    </TouchableOpacity>
+  );
+};
 
 export default CustomTabButton;

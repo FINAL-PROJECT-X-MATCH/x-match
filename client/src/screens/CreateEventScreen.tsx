@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, TextInput, Image, Text, ScrollView, Alert, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, TextInput, Image, Text, ScrollView, TouchableOpacity, Dimensions, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import MapView, { Marker, MapPressEvent, PROVIDER_DEFAULT } from 'react-native-maps';
@@ -10,6 +10,7 @@ import RNPickerSelect from 'react-native-picker-select';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import axiosInstance from '../config/axiosInstance';
+import Toast from 'react-native-toast-message';
 import tw from 'twrnc';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -36,6 +37,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
   });
+  const [loading, setLoading] = useState(false);
 
   const { user } = useAuth();
   const ref = useRef<any>(null);
@@ -44,7 +46,11 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission to access location was denied');
+        Toast.show({
+          type: 'error',
+          text1: 'Permission Denied',
+          text2: 'Permission to access location was denied'
+        });
         return;
       }
 
@@ -94,6 +100,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
 
   const createEvent = async () => {
     if (user?.token) {
+      setLoading(true);
       const formData = new FormData();
       formData.append('name', name);
       formData.append('category', category);
@@ -117,9 +124,21 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             'Content-Type': 'multipart/form-data',
           },
         });
+        Toast.show({
+          type: 'success',
+          text1: 'Event Created',
+          text2: 'Your event has been created successfully.'
+        });
         navigation.navigate('Home');
       } catch (error: any) {
         console.error('Error creating event:', error.response ? error.response.data : error.message);
+        Toast.show({
+          type: 'error',
+          text1: 'Error Creating Event',
+          text2: error.response ? error.response.data.message : error.message
+        });
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -175,10 +194,10 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
               <RNPickerSelect
                 onValueChange={(value) => setCategory(value)}
                 items={[
-                  { label: 'Sepakbola', value: 'Sepakbola' },
+                  { label: 'Football', value: 'Football' },
                   { label: 'Futsal', value: 'Futsal' },
                   { label: 'Gym', value: 'Gym' },
-                  { label: 'Basket', value: 'Basket' },
+                  { label: 'Basketball', value: 'Basketball' },
                 ]}
                 style={{
                   inputIOS: tw`p-4 text-gray-800 text-lg`,
@@ -256,12 +275,16 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
           </View>
         </View>
         
-        <TouchableOpacity
-          onPress={createEvent}
-          style={tw`bg-indigo-600 p-4 rounded-xl mt-4`}
-        >
-          <Text style={tw`text-white text-center font-bold text-lg`}>Create Event</Text>
-        </TouchableOpacity>
+        {loading ? (
+          <ActivityIndicator size="large" color="#4F46E5" />
+        ) : (
+          <TouchableOpacity
+            onPress={createEvent}
+            style={tw`bg-indigo-600 p-4 rounded-xl mt-4`}
+          >
+            <Text style={tw`text-white text-center font-bold text-lg`}>Create Event</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
 
       <Modal

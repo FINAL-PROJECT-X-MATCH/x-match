@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  View, Text, TouchableOpacity, Image, FlatList, ActivityIndicator, RefreshControl,
+  View, Text, TouchableOpacity, Image, FlatList, ActivityIndicator, RefreshControl, TextInput,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import axiosInstance from '../config/axiosInstance';
@@ -12,47 +11,41 @@ import * as Location from 'expo-location';
 import tw from 'twrnc';
 import { LinearGradient } from 'expo-linear-gradient';
 
-type ListEventScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ListEvent'>;
-type ListEventScreenRouteProp = RouteProp<RootStackParamList, 'ListEvent'>;
+type EventsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Events'>;
 
 type Props = {
-  navigation: ListEventScreenNavigationProp;
-  route: ListEventScreenRouteProp;
+  navigation: EventsScreenNavigationProp;
 };
 
-const ListEvent: React.FC<Props> = ({ navigation, route }) => {
-  const { category } = route.params;
+const Events: React.FC<Props> = ({ navigation }) => {
   const [events, setEvents] = useState<any[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<any[]>([]);
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sortOption, setSortOption] = useState<'newest' | 'oldest' | 'nearest'>('newest');
+  const [searchText, setSearchText] = useState<string>('');
   const { user } = useAuth();
 
-  const fetchEvents = useCallback(async () => {
-    if (user && user.token) {
-      try {
-        const response = await axiosInstance.get('/events', {
-          headers: { Authorization: `Bearer ${user.token}` }
-        });
-        setEvents(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error(error);
-        setLoading(false);
-      }
-    }
-  }, [user]);
-
   useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
+    const fetchEvents = async () => {
+      if (user && user.token) {
+        try {
+          const response = await axiosInstance.get('/events', {
+            headers: { Authorization: `Bearer ${user.token}` }
+          });
+          setEvents(response.data);
+          setFilteredEvents(response.data);
+          setLoading(false);
+        } catch (error) {
+          console.error(error);
+          setLoading(false);
+        }
+      }
+    };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchEvents();
-    }, [fetchEvents])
-  );
+    fetchEvents();
+  }, [user]);
 
   useEffect(() => {
     const getLocation = async () => {
@@ -70,14 +63,29 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
     getLocation();
   }, []);
 
+  useEffect(() => {
+    const filtered = events.filter(event => event.name.toLowerCase().includes(searchText.toLowerCase()));
+    setFilteredEvents(filtered);
+  }, [searchText, events]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchEvents();
+    if (user && user.token) {
+      try {
+        const response = await axiosInstance.get('/events', {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
+        setEvents(response.data);
+        setFilteredEvents(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
     setRefreshing(false);
   };
 
   const sortEvents = () => {
-    let sortedEvents = events.filter(event => category === 'All' || event.category.toLowerCase() === category.toLowerCase());
+    let sortedEvents = [...filteredEvents];
     if (sortOption === 'newest') {
       sortedEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } else if (sortOption === 'oldest') {
@@ -124,14 +132,14 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const toRadians = (deg: number) => (deg * Math.PI) / 180;
-    const R = 6371; // Radius of the Earth in km
+    const R = 6371;
     const dLat = toRadians(lat2 - lat1);
     const dLon = toRadians(lon2 - lon1);
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
               Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
               Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
+    return R * c; 
   };
 
   const getDistance = (event: any) => {
@@ -150,15 +158,11 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
       onPress={() => navigation.navigate('EventDetail', { eventId: item._id })} 
       style={tw`mb-4`}
     >
-      <View style={tw`bg-white rounded-3xl overflow-hidden shadow-lg`}>
+      <LinearGradient
+        colors={['#e0eafc', '#cfdef3']}
+        style={tw`bg-white rounded-3xl overflow-hidden shadow-lg`}
+      >
         <Image source={{ uri: item.imageLocation }} style={tw`w-full h-48`} />
-        <LinearGradient
-          colors={['#e0eafc', '#cfdef3']}
-          style={tw`absolute top-0 left-0 right-0 h-16`}
-        />
-        <View style={tw`absolute top-2 right-2 bg-white rounded-full p-2`}>
-          <FontAwesome name="heart-o" size={20} color="#4F46E5" />
-        </View>
         <View style={tw`p-3`}>
           <Text style={tw`text-base font-bold mb-1 text-black`}>{item.name}</Text>
           <View style={tw`flex-row items-center mb-2`}>
@@ -182,7 +186,7 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
             </View>
           )}
         </View>
-      </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 
@@ -193,12 +197,15 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
   return (
     <View style={tw`flex-1 bg-gray-50`}>
       <LinearGradient colors={['#4F46E5', '#818CF8']} style={tw`pt-12 pb-6 px-4 rounded-b-3xl`}>
-        <View style={tw`flex-row items-center justify-between`}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={tw`p-2`}>
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <Text style={tw`text-3xl font-bold text-white`}>{category} Events</Text>
-          <View style={tw`p-2`}></View>
+        <View style={tw`bg-white rounded-full px-4 py-3 shadow-lg flex-row items-center`}>
+          <MaterialIcons name="search" size={24} color="#4F46E5" />
+          <TextInput
+            placeholder="Search events..."
+            value={searchText}
+            onChangeText={setSearchText}
+            style={tw`flex-1 ml-3 text-base text-black`}
+            placeholderTextColor="#A0AEC0"
+          />
         </View>
         <View style={tw`flex-row justify-between mt-4`}>
           <TouchableOpacity onPress={() => setSortOption('newest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'newest' ? 'bg-[#4F46E5]' : 'bg-gray-100'}`}>
@@ -226,7 +233,7 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
           />
         }
         ListHeaderComponent={() => (
-          <Text style={tw`text-3xl font-bold text-black mb-6`}>All Events - {category}</Text>
+          <Text style={tw`text-3xl font-bold text-black mb-6`}>All Events</Text>
         )}
         showsVerticalScrollIndicator={false}
       />
@@ -234,4 +241,4 @@ const ListEvent: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-export default ListEvent;
+export default Events;
