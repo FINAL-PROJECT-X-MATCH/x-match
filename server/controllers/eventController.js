@@ -91,11 +91,11 @@ class EventController {
         }
       }).toArray();
 
-      getEvents.forEach((event) => {
+      for (const event of getEvents) {
         playersNotified.push(event._id);
         const players = event.players;
         const date = new Date(event.date).toLocaleDateString();
-        players.forEach(async (player) => {
+        for (const player of players) {
           const id = new ObjectId(player);
           await db.collection('users').updateOne(
             { _id: id },
@@ -109,8 +109,8 @@ class EventController {
               }
             }
           );
-        });
-      });
+        };
+      };
       let id = playersNotified.join(',');
       console.log(`Player(s) with ID(s) ${id} have been notified.`);
     } catch (error) {
