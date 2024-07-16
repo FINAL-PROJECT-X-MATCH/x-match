@@ -20,6 +20,11 @@ class UserController {
         username,
         email,
         password: hashedPassword,
+        notification: [],
+        status: {
+          ban: false,
+          duration: ""
+        },
         createdAt: new Date(),
         updatedAt: new Date()
       };
