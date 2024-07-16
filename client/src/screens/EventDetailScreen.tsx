@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,7 @@ import { BlurView } from 'expo-blur';
 import { SharedElement } from 'react-navigation-shared-element';
 import { StackScreenProps } from '@react-navigation/stack';
 import Toast from 'react-native-toast-message';
+import { WebView } from 'react-native-webview';
 
 type RootStackParamList = {
   EventDetail: { eventId: string };
@@ -34,14 +35,16 @@ interface Event {
   };
   category: string;
   description: string;
-  player: string[];
+  player: { _id: string, username: string, avatar: string }[];
   quota: number;
+  price: number | 'free';
 }
 
 const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation }) => {
   const { eventId } = route.params;
   const [event, setEvent] = useState<Event | null>(null);
   const [isJoined, setIsJoined] = useState<boolean>(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -56,17 +59,45 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           headers: { Authorization: `Bearer ${user.token}` }
         });
         setEvent(response.data);
-        setIsJoined(response.data.player.includes(user.id));
+        setIsJoined(response.data.player.some(player => player._id === user.id));
       } catch (error) {
         console.error(error);
       }
     }
   };
 
+  const formatIDR = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR'
+    }).format(amount);
+  };
+
+  const handlePayment = async () => {
+    try {
+      const response = await axiosInstance.post('/midtrans/transaction', {
+        eventId: eventId,
+        amount: event?.price,
+      }, {
+        headers: { Authorization: `Bearer ${user?.token}` }
+      });
+
+      const { token } = response.data;
+      setPaymentUrl(`https://app.sandbox.midtrans.com/snap/v2/vtweb/${token}`);
+    } catch (error) {
+      console.error('Payment Error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Payment Error',
+        text2: 'Failed to initiate payment.',
+      });
+    }
+  };
+
   const joinEvent = async () => {
     if (user?.token) {
       try {
-        await axiosInstance.post(`/event/${eventId}/join`, {}, {
+        const response = await axiosInstance.post(`/event/${eventId}/join`, {}, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
         Toast.show({
@@ -75,6 +106,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           text2: 'You have successfully joined the event.',
         });
         setIsJoined(true);
+        setEvent(response.data); // Update the event state with the updated event data
       } catch (error) {
         console.error(error);
         Toast.show({
@@ -86,6 +118,21 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
     }
   };
 
+  const handleJoinEvent = () => {
+    if (event?.price === 'free') {
+      joinEvent();
+    } else {
+      Alert.alert(
+        'Payment Required',
+        `This event requires payment of ${formatIDR(event?.price as number)}. Do you want to proceed to payment?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Proceed', onPress: handlePayment },
+        ]
+      );
+    }
+  };
+
   const openLocationInMaps = () => {
     if (event?.location) {
       openMap({ latitude: event.location.latitude, longitude: event.location.longitude });
@@ -93,6 +140,20 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
   };
 
   if (!event) return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(249 115 22)" />;
+
+  if (paymentUrl) {
+    return (
+      <WebView
+        source={{ uri: paymentUrl }}
+        onNavigationStateChange={(navState) => {
+          if (navState.url.includes('transaction_status=settlement')) {
+            setPaymentUrl(null);
+            joinEvent();
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <View style={tw`flex-1`}>
@@ -171,14 +232,14 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           </Text>
 
           {!isJoined && (
-            <TouchableOpacity onPress={joinEvent}>
+            <TouchableOpacity onPress={handleJoinEvent}>
               <LinearGradient
                 colors={['rgb(249 115 22)', 'rgb(234 88 12)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={tw`py-4 px-8 rounded-full shadow-lg`}
               >
-                <Text style={tw`text-white font-bold text-lg text-center`}>Join Event</Text>
+                <Text style={tw`text-white font-bold text-lg text-center`}>{event.price === 'free' ? 'Join Event' : `Pay ${formatIDR(event.price as number)} and Join`}</Text>
               </LinearGradient>
             </TouchableOpacity>
           )}

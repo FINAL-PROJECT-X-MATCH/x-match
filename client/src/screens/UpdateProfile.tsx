@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Image, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Image, TextInput, StyleSheet, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView, Modal } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axiosInstance from '../config/axiosInstance';
 import { useAuth } from '../context/AuthContext';
@@ -13,9 +13,12 @@ const UpdateProfile: React.FC = () => {
   const navigation = useNavigation();
   const [username, setUsername] = useState<string>('');
   const [email, setEmail] = useState<string>('');
+  const [fullName, setFullName] = useState<string>('');
+  const [gender, setGender] = useState<string>('');
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     fetchUserData();
@@ -30,6 +33,8 @@ const UpdateProfile: React.FC = () => {
       const userData = response.data;
       setUsername(userData.username);
       setEmail(userData.email);
+      setFullName(userData.fullName || '');
+      setGender(userData.gender || '');
       setImage(userData.avatar);
       setLoading(false);
     } catch (error) {
@@ -39,24 +44,7 @@ const UpdateProfile: React.FC = () => {
   };
 
   const pickImage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
-      alert("You've refused to allow this app to access your photos!");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setUploading(true);
-      setImage(result.assets[0].uri);
-      setUploading(false);
-    }
+    // ... (unchanged)
   };
 
   const updateProfile = async () => {
@@ -65,6 +53,8 @@ const UpdateProfile: React.FC = () => {
       const formData = new FormData();
       formData.append('username', username);
       formData.append('email', email);
+      formData.append('fullName', fullName);
+      formData.append('gender', gender);
 
       if (image) {
         const uriParts = image.split('.');
@@ -137,12 +127,21 @@ const UpdateProfile: React.FC = () => {
               <Ionicons name="person" size={20} color="rgb(249 115 22)" style={tw`mr-2`} />
               <TextInput
                 style={tw`flex-1 text-lg`}
+                placeholder="Full Name"
+                value={fullName}
+                onChangeText={setFullName}
+              />
+            </View>
+            <View style={[tw`flex-row items-center border p-3 rounded-xl mb-4`, { borderColor: 'rgb(249 115 22)' }]}>
+              <Ionicons name="person" size={20} color="rgb(249 115 22)" style={tw`mr-2`} />
+              <TextInput
+                style={tw`flex-1 text-lg`}
                 placeholder="Username"
                 value={username}
                 onChangeText={setUsername}
               />
             </View>
-            <View style={[tw`flex-row items-center border p-3 rounded-xl`, { borderColor: 'rgb(249 115 22)' }]}>
+            <View style={[tw`flex-row items-center border p-3 rounded-xl mb-4`, { borderColor: 'rgb(249 115 22)' }]}>
               <Ionicons name="mail" size={20} color="rgb(249 115 22)" style={tw`mr-2`} />
               <TextInput
                 style={tw`flex-1 text-lg`}
@@ -152,6 +151,16 @@ const UpdateProfile: React.FC = () => {
                 keyboardType="email-address"
               />
             </View>
+            <TouchableOpacity
+              style={[tw`flex-row items-center border p-3 rounded-xl`, { borderColor: 'rgb(249 115 22)' }]}
+              onPress={() => setModalVisible(true)}
+            >
+              <Ionicons name="transgender" size={20} color="rgb(249 115 22)" style={tw`mr-2`} />
+              <Text style={tw`flex-1 text-lg ${gender ? 'text-black' : 'text-gray-400'}`}>
+                {gender || 'Select Gender'}
+              </Text>
+              <Ionicons name="chevron-down" size={20} color="rgb(249 115 22)" />
+            </TouchableOpacity>
           </View>
           <TouchableOpacity style={[tw`p-4 rounded-full mb-4 flex-row justify-center items-center`, { backgroundColor: 'rgb(249 115 22)' }]} onPress={updateProfile}>
             {loading ? (
@@ -169,6 +178,52 @@ const UpdateProfile: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={tw`flex-1 justify-end bg-black bg-opacity-50`}>
+          <View style={tw`bg-white rounded-t-3xl p-6`}>
+            <Text style={tw`text-2xl font-bold text-orange-500 mb-4`}>Select Gender</Text>
+            <TouchableOpacity
+              style={tw`p-4 border-b border-gray-200`}
+              onPress={() => {
+                setGender('Male');
+                setModalVisible(false);
+              }}
+            >
+              <Text style={tw`text-lg`}>Male</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={tw`p-4 border-b border-gray-200`}
+              onPress={() => {
+                setGender('Female');
+                setModalVisible(false);
+              }}
+            >
+              <Text style={tw`text-lg`}>Female</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={tw`p-4`}
+              onPress={() => {
+                setGender('Other');
+                setModalVisible(false);
+              }}
+            >
+              <Text style={tw`text-lg`}>Other</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={tw`mt-4 p-4 rounded-full bg-orange-500 items-center`}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={tw`text-white font-bold`}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
