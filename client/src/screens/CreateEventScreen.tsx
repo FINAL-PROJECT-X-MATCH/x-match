@@ -121,18 +121,20 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
       formData.append('price', isFree ? 'free' : (Number(price) + 1000).toString());
 
       try {
-        await axiosInstance.post('/event', formData, {
+        const response = await axiosInstance.post('/event', formData, {
           headers: {
             Authorization: `Bearer ${user.token}`,
             'Content-Type': 'multipart/form-data',
           },
         });
+        const createdEvent = response.data;
         Toast.show({
           type: 'success',
           text1: 'Event Created',
           text2: 'Your event has been created successfully.'
         });
-        navigation.navigate('Home');
+        navigation.navigate('EventDetail', { eventId: createdEvent._id }); // Navigate to EventDetail page
+        
         // Reset form state
         setName('');
         setCategory('');

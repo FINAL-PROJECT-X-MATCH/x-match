@@ -27,7 +27,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 
-const socketUrl = 'https://18bf-36-68-222-140.ngrok-free.app';
+const socketUrl = 'https://8eb4-36-68-222-140.ngrok-free.app ';
 
 type ChatScreenRouteProp = RouteProp<RootStackParamList, 'Chat'>;
 type ChatScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Chat'>;
