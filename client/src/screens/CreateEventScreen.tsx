@@ -296,7 +296,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
               </View>
               {price && (
                 <Text style={tw`mt-2 text-gray-600 italic`}>
-                  The event price will be shown as Rp {Number(price) + 1000}
+                  The event price will be shown as Rp {Number(price) + 2000}
                 </Text>
               )}
             </View>

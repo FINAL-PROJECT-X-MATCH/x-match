@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, ScrollView, TouchableOpacity, Image, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { 
+  View, Text, ActivityIndicator, ScrollView, TouchableOpacity, 
+  Image, Alert, Animated, Dimensions, Easing
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
 import { useAuth } from '../context/AuthContext';
@@ -35,10 +38,12 @@ interface Event {
   };
   category: string;
   description: string;
-  player: { _id: string, username: string, avatar: string }[];
+  player: string[];
   quota: number;
   price: number | 'free';
 }
+
+const { width, height } = Dimensions.get('window');
 
 const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation }) => {
   const { eventId } = route.params;
@@ -46,10 +51,25 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
   const [isJoined, setIsJoined] = useState<boolean>(false);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const { user } = useAuth();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
     moment.locale('id');
     fetchEventDetail();
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 4,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, [eventId, user?.token]);
 
   const fetchEventDetail = async () => {
@@ -59,7 +79,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           headers: { Authorization: `Bearer ${user.token}` }
         });
         setEvent(response.data);
-        setIsJoined(response.data.player.some(player => player._id === user.id));
+        setIsJoined(response.data.player.includes(user.id))
       } catch (error) {
         console.error(error);
       }
@@ -106,7 +126,8 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           text2: 'You have successfully joined the event.',
         });
         setIsJoined(true);
-        setEvent(response.data); // Update the event state with the updated event data
+        setEvent(response.data);
+        
       } catch (error) {
         console.error(error);
         Toast.show({
@@ -155,41 +176,61 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
     );
   }
 
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [height * 0.5, height * 0.2],
+    extrapolate: 'clamp',
+  });
+
+  const headerTitleOpacity = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
   return (
-    <View style={tw`flex-1`}>
-      <View style={tw`absolute top-10 left-5 z-10`}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={tw`bg-white p-2 rounded-full shadow`}>
-          <Ionicons name="arrow-back" size={24} color="rgb(249 115 22)" />
-        </TouchableOpacity>
-      </View>
-      <ScrollView contentContainerStyle={tw`pb-10`}>
+    <View style={tw`flex-1 bg-gray-100`}>
+      <Animated.View style={[tw`w-full overflow-hidden`, { height: headerHeight }]}>
         <SharedElement id={`event.${eventId}.image`}>
-          <Image source={{ uri: event.imageLocation }} style={tw`w-full h-80`} />
+          <Image source={{ uri: event.imageLocation }} style={tw`w-full h-full`} />
         </SharedElement>
         <LinearGradient
-          colors={['rgba(255,255,255,0)', 'rgba(255,255,255,1)']}
-          style={tw`absolute left-0 right-0 top-60 h-20`}
+          colors={['rgba(0,0,0,0.7)', 'transparent']}
+          style={tw`absolute inset-0`}
         />
-        <View style={tw`px-6 -mt-10`}>
-          <BlurView intensity={80} tint="light" style={tw`rounded-3xl overflow-hidden mb-6`}>
-            <View style={tw`p-6`}>
-              <Text style={tw`text-3xl font-bold text-gray-800 mb-2`}>{event.name}</Text>
-              <View style={tw`flex-row items-center mb-4`}>
-                <Ionicons name="person-circle" size={24} color="rgb(249 115 22)" />
-                <Text style={tw`text-base text-gray-600 ml-2`}>Posted by {event.authorUsername}</Text>
-              </View>
-              <View style={tw`flex-row items-center mb-4 bg-gray-100 p-4 rounded-xl`}>
-                <Ionicons name="calendar" size={20} color="rgb(249 115 22)" />
-                <Text style={tw`text-base text-gray-700 ml-3`}>{moment(event.date).format('dddd, DD MMMM YYYY')}</Text>
-              </View>
-              <TouchableOpacity onPress={openLocationInMaps} style={tw`flex-row items-center mb-4 bg-gray-100 p-4 rounded-xl`}>
-                <Ionicons name="location" size={20} color="rgb(249 115 22)" />
-                <Text style={tw`text-base text-gray-700 ml-3 underline`}>{event.address}</Text>
-              </TouchableOpacity>
+        <Animated.View style={[tw`absolute top-12 left-0 right-0 items-center`, { opacity: headerTitleOpacity }]}>
+          <Text style={tw`text-2xl font-bold text-white text-center px-4`}>{event.name}</Text>
+        </Animated.View>
+        <Animated.View style={[tw`absolute bottom-8 left-5 right-5`, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+          <BlurView intensity={80} tint="dark" style={tw`rounded-3xl overflow-hidden`}>
+            <View style={tw`p-4`}>
+              <Text style={tw`text-3xl font-bold text-white mb-2`}>{event.name}</Text>
+              <Text style={tw`text-lg text-white`}>{moment(event.date).format('dddd, DD MMMM YYYY')}</Text>
             </View>
           </BlurView>
+        </Animated.View>
+      </Animated.View>
 
-          <View style={tw`h-56 rounded-3xl overflow-hidden my-6 shadow-lg`}>
+      <Animated.ScrollView
+        contentContainerStyle={tw`pt-5 pb-20`}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+      >
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
+          <BlurView intensity={80} tint="light" style={tw`mx-5 p-5 rounded-3xl overflow-hidden shadow-lg`}>
+            <View style={tw`flex-row items-center mb-3`}>
+              <Ionicons name="location" size={24} color="rgb(249 115 22)" />
+              <Text style={tw`ml-2 text-base text-gray-700`}>{event.address}</Text>
+            </View>
+            <TouchableOpacity onPress={openLocationInMaps} style={tw`bg-orange-500 p-3 rounded-xl items-center`}>
+              <Text style={tw`text-white font-bold`}>Open in Maps</Text>
+            </TouchableOpacity>
+          </BlurView>
+
+          <View style={tw`h-52 mx-5 my-5 rounded-3xl overflow-hidden shadow-lg`}>
             <MapView
               style={tw`flex-1`}
               initialRegion={{
@@ -198,6 +239,10 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                 latitudeDelta: 0.01,
                 longitudeDelta: 0.01,
               }}
+              scrollEnabled={false}
+              pitchEnabled={false}
+              rotateEnabled={false}
+              zoomEnabled={false}
             >
               <Marker
                 coordinate={{
@@ -210,45 +255,65 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
             </MapView>
           </View>
 
-          <BlurView intensity={80} tint="light" style={tw`rounded-3xl overflow-hidden mb-6`}>
-            <View style={tw`p-6`}>
-              <View style={tw`flex-row items-center mb-4`}>
-                <Ionicons name="pricetag" size={20} color="rgb(249 115 22)" />
-                <Text style={tw`text-base text-gray-700 ml-3`}>{event.category}</Text>
-              </View>
-              <Text style={tw`text-base text-gray-700`}>{event.description}</Text>
+          <BlurView intensity={80} tint="light" style={tw`mx-5 p-5 rounded-3xl overflow-hidden shadow-lg`}>
+            <View style={tw`flex-row items-center mb-3`}>
+              <Ionicons name="person-circle" size={24} color="rgb(249 115 22)" />
+              <Text style={tw`ml-2 text-base text-gray-700`}>Posted by {event.authorUsername}</Text>
             </View>
           </BlurView>
 
-          {isJoined && (
-            <View style={styles.joinedMessageContainer}>
-              <Ionicons name="checkmark-circle" size={32} color="rgb(249 115 22)" />
-              <Text style={styles.joinedMessageText}>You have joined this event</Text>
+          <BlurView intensity={80} tint="light" style={tw`mx-5 p-5 rounded-3xl overflow-hidden shadow-lg`}>
+            <Text style={tw`text-2xl font-bold text-gray-800 mb-3`}>About the Event</Text>
+            <View style={tw`flex-row items-center mb-3`}>
+              <Ionicons name="pricetag" size={20} color="rgb(249 115 22)" />
+              <Text style={tw`ml-2 text-base text-orange-500`}>{event.category}</Text>
             </View>
-          )}
+            <Text style={tw`text-base text-gray-700 leading-6`}>{event.description}</Text>
+          </BlurView>
 
-          <Text style={tw`text-xl font-bold text-center text-gray-800 mb-6`}>
-            {`Participant: ${event.player.length}/${event.quota}`}
-          </Text>
+          <Animated.View style={[tw`mx-5 my-5`, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+            <BlurView intensity={80} tint="light" style={tw`p-4 rounded-3xl shadow-lg`}>
+              <Text style={tw`text-xl font-bold text-center text-gray-800 mb-2`}>
+                {`Participants: ${event.player.length}/${event.quota}`}
+              </Text>
+              <View style={tw`w-full bg-gray-200 rounded-full h-2.5`}>
+                <View 
+                  style={[
+                    tw`bg-orange-500 h-2.5 rounded-full`, 
+                    { width: `${(event.player.length / event.quota) * 100}%` }
+                  ]} 
+                />
+              </View>
+            </BlurView>
+          </Animated.View>
 
           {!isJoined && (
-            <TouchableOpacity onPress={handleJoinEvent}>
+            <TouchableOpacity onPress={handleJoinEvent} style={tw`mx-5 mt-5`}>
               <LinearGradient
                 colors={['rgb(249 115 22)', 'rgb(234 88 12)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                style={tw`py-4 px-8 rounded-full shadow-lg`}
+                style={tw`py-4 px-6 rounded-full shadow-lg`}
               >
-                <Text style={tw`text-white font-bold text-lg text-center`}>{event.price === 'free' ? 'Join Event' : `Pay ${formatIDR(event.price as number)} and Join`}</Text>
+                <Text style={tw`text-center text-lg font-bold text-white`}>
+                  {event.price === 'free' ? 'Join Event' : `Pay ${formatIDR(event.price as number)} and Join`}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           )}
-        </View>
-      </ScrollView>
+        </Animated.View>
+      </Animated.ScrollView>
+
+      <TouchableOpacity
+        style={tw`absolute top-10 left-5 bg-black bg-opacity-50 rounded-full p-2`}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={24} color="white" />
+      </TouchableOpacity>
 
       {isJoined && (
         <TouchableOpacity
-          style={[styles.chatBubble, tw`bg-orange-600`]}
+          style={tw`absolute bottom-8 right-8 w-15 h-15 rounded-full bg-orange-500 justify-center items-center shadow-lg`}
           onPress={() => navigation.navigate('Chat', { eventId })}
         >
           <Ionicons name="chatbubble-ellipses" size={24} color="white" />
@@ -257,36 +322,5 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  chatBubble: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 2,
-    elevation: 5,
-  },
-  joinedMessageContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-    padding: 10,
-    backgroundColor: '#E0E7FF',
-    borderRadius: 20,
-  },
-  joinedMessageText: {
-    textAlign: 'center',
-    color: 'rgb(249 115 22)',
-    fontSize: 16,
-    marginTop: 5,
-  },
-});
 
 export default EventDetailScreen;

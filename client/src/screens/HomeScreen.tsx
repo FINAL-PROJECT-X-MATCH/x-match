@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, Image, FlatList, Dimensions, Animated, ScrollView, ActivityIndicator, RefreshControl, Modal
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { MaterialIcons, FontAwesome, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import axiosInstance from '../config/axiosInstance';
@@ -18,8 +19,8 @@ type Props = {
 };
 
 const { width: screenWidth } = Dimensions.get('window');
-const bannerWidth = screenWidth * 0.9;  // Adjusted banner width
-const bannerHeight = bannerWidth * 0.5;  // Adjusted banner height
+const bannerWidth = screenWidth * 0.9;
+const bannerHeight = bannerWidth * 0.5;
 
 const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [events, setEvents] = useState<any[]>([]);
@@ -31,7 +32,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const scrollViewRef = useRef<FlatList>(null);
-  const { user } = useAuth();
+  const { user, getNotifications, unableToJoin, notificationOK } = useAuth();
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -78,6 +79,18 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     ).start();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchNotifications = async () => {
+        const notifications = await getNotifications();
+        setNotifications(Array.isArray(notifications) ? notifications : []);
+        setUnreadCount(notifications.filter((notification: any) => !notification.read).length);
+      };
+
+      fetchNotifications();
+    }, [])
+  );
+
   const onRefresh = async () => {
     setRefreshing(true);
     if (user && user.token) {
@@ -101,7 +114,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         });
         const notifications = Array.isArray(response.data) ? response.data : [];
         setNotifications(notifications);
-        setUnreadCount(notifications.filter((notification: any) => !notification.read).length); 
+        setUnreadCount(notifications.filter((notification: any) => !notification.read).length);
         setModalVisible(true);
       } catch (error) {
         console.error('Error fetching notifications:', error);
@@ -119,6 +132,31 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     setUnreadCount(0);
   };
 
+  const handleUnableToJoin = async (eventId: string) => {
+    try {
+      await unableToJoin(eventId);
+      onRefresh();
+    } catch (error) {
+      console.error('Error leaving event:', error);
+    }
+  };
+
+  const handleNotificationResponse = async (notification: any, response: 'yes' | 'no') => {
+    if (response === 'no') {
+      await handleUnableToJoin(notification.eventId);
+    } else if (response === 'yes') {
+      await notificationOK(notification.eventId);
+    }
+
+    // Remove notification
+    setNotifications((prevNotifications) =>
+      prevNotifications.filter((notif) => notif.eventId !== notification.eventId)
+    );
+    setUnreadCount((prevCount) => prevCount - 1);
+
+    setModalVisible(false);
+  };
+
   const banners = [
     "https://images.pexels.com/photos/863988/pexels-photo-863988.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
     "https://images.pexels.com/photos/248547/pexels-photo-248547.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
@@ -126,9 +164,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   ];
 
   const renderBanner = ({ item, index }: { item: string, index: number }) => (
-    <Image 
-      key={index} 
-      source={{ uri: item }} 
+    <Image
+      key={index}
+      source={{ uri: item }}
       style={[tw`h-48 rounded-3xl`, { width: bannerWidth, height: bannerHeight }]}
     />
   );
@@ -157,10 +195,10 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
     const toRadians = (deg: number) => (deg * Math.PI) / 180;
     const R = 6371;
     const dLat = toRadians(lat2 - lat1);
-    const dLon = toRadians(lon2 - lon1);
+    const dLon = toRadians(lon1 - lon2);
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -197,13 +235,13 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   });
 
   const renderEventItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      onPress={() => navigation.navigate('EventDetail', { eventId: item._id })} 
+    <TouchableOpacity
+      onPress={() => navigation.navigate('EventDetail', { eventId: item._id })}
       style={tw`mr-4 w-72`} // Adjusted width of the event card
     >
       <View style={tw`bg-white rounded-3xl overflow-hidden shadow-lg`}>
         <Image source={{ uri: item.imageLocation }} style={tw`w-full h-36`} />
-        
+
         <View style={tw`absolute top-2 right-2 bg-white rounded-full p-2`}>
           <FontAwesome name="heart-o" size={20} color="#f97316" />
         </View>
@@ -301,9 +339,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           )}
           renderItem={renderBanner}
           contentContainerStyle={tw`px-4`}
-          snapToInterval={bannerWidth + 10}  
+          snapToInterval={bannerWidth + 10}
           decelerationRate="fast"
-          ItemSeparatorComponent={() => <View style={tw`w-2`} />}  
+          ItemSeparatorComponent={() => <View style={tw`w-2`} />}
         />
         <View style={tw`flex-row justify-center mt-4`}>
           {banners.map((_, i) => {
@@ -337,7 +375,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
           data={['Football', 'Futsal', 'Gym', 'Basketball']}
           keyExtractor={(item) => item}
           renderItem={({ item }) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => navigation.navigate('ListEvent', { category: item })}
               style={tw`mr-3 bg-white px-6 py-3 rounded-full shadow-md border-2 border-[#f97316] flex-row items-center`}
             >
@@ -363,17 +401,32 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         }}
       >
         <View style={tw`flex-1 justify-center items-center bg-black bg-opacity-50`}>
-          <View style={tw`bg-white p-6 rounded-3xl shadow-lg w-11/12`}>
+          <View style={tw`bg-white p-6 rounded-3xl shadow-lg w-11/12 max-h-3/4`}>
             <Text style={tw`text-2xl font-bold mb-4 text-black`}>Notifications</Text>
             <FlatList
               data={notifications}
-              keyExtractor={(item) => item._id.toString()}
+              keyExtractor={(item) => (item._id && item._id.toString()) || Math.random().toString()}
               renderItem={({ item }) => (
                 <View style={tw`mb-4 p-4 bg-gray-100 rounded-lg shadow-md`}>
-                  <Text style={tw`text-lg font-bold text-black`}>{item.message}</Text>
+                  <Text style={tw`text-lg font-bold text-black`}>{item.message || 'No message'}</Text>
+                  <View style={tw`flex-row justify-between mt-4`}>
+              <TouchableOpacity
+    style={tw`bg-green-500 py-2 px-4 rounded-full flex-1 mr-2`}
+    onPress={() => handleNotificationResponse(item, 'yes')}
+  >
+    <Text style={tw`text-white text-center text-sm font-bold`}>Yes</Text>
+  </TouchableOpacity>
+  <TouchableOpacity
+    style={tw`bg-red-500 py-2 px-4 rounded-full flex-1 ml-2`}
+    onPress={() => handleNotificationResponse(item, 'no')}
+  >
+    <Text style={tw`text-white text-center text-sm font-bold`}>No</Text>
+  </TouchableOpacity>
+</View>
                 </View>
               )}
               showsVerticalScrollIndicator={false}
+              contentContainerStyle={tw`pb-4`}
             />
             <TouchableOpacity
               style={tw`mt-4 bg-orange-600 py-3 px-6 rounded-full`}

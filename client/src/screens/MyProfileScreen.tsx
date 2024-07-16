@@ -135,6 +135,10 @@ const MyProfileScreen: React.FC = () => {
               <Text style={tw`text-sm text-gray-600`}>Upcoming</Text>
             </View>
             <View style={tw`items-center`}>
+              <Text style={tw`text-2xl font-bold text-orange-600`}>Free</Text>
+              <Text style={tw`text-sm text-gray-600`}>Member</Text>
+            </View>
+            <View style={tw`items-center`}>
               <Text style={tw`text-2xl font-bold text-orange-600`}>{pastEvents.length}</Text>
               <Text style={tw`text-sm text-gray-600`}>History</Text>
             </View>

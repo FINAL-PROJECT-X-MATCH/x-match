@@ -36,7 +36,7 @@ const ListChatScreen: React.FC = () => {
           const latestMessage = messagesResponse.data.length > 0 ? messagesResponse.data[0] : null;
           return { ...event, latestMessage };
         }));
-        const filterListChat = eventsWithMessages.filter(list => new Date(list.date) > new Date())
+        const filterListChat = eventsWithMessages.filter(list => new Date(list.date) > new Date());
 
         setEvents(filterListChat);
         setLoading(false);
@@ -101,7 +101,12 @@ const ListChatScreen: React.FC = () => {
   );
 
   if (loading) {
-    return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(249 115 22)" />;
+    return (
+      <View style={tw`flex-1 justify-center items-center`}>
+        <ActivityIndicator size="large" color="rgb(249 115 22)" />
+        <Text style={tw`mt-2 text-lg text-gray-600`}>Loading Chats...</Text>
+      </View>
+    );
   }
 
   return (
@@ -123,6 +128,7 @@ const ListChatScreen: React.FC = () => {
           />
         }
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={<Text style={tw`text-center text-gray-600 mt-4`}>No events found.</Text>}
       />
     </View>
   );
