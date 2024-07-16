@@ -166,6 +166,39 @@ class UserController {
       res.status(500).send({ error: "Internal Server Error" });
     }
   }
+
+  static async notificationOK(req, res, next) {
+    // tujuan jika user bisa datang, notifikasi kehapus
+    try {
+      const { _id } = req.user
+      const { eventId } = req.params
+      const db = await getDb()
+      const user = await db.collection("users").findOne({ _id })
+      const notifications = user.notification
+      console.log(notifications, "sebelum di cut");
+      const indexNotif = notifications.findIndex(notification => {
+        return notification.eventId.equals(new ObjectId(eventId))
+      }
+      )
+      if (indexNotif === -1) {
+        res.status(201).json({
+          message: "Event id is not register to the user"
+        })
+      }
+      notifications.splice(indexNotif, 1)
+      const updateNotif = await db.collection("users").updateOne(
+        {_id},
+        {$set: {
+          notification: notifications
+        }}
+      )
+      res.status(201).json({
+        message: "succesfully delete notification"
+      })
+    } catch (error) {
+      res.status(500).send({ error: "internal server error" })
+    }
+  }
 }
 
 module.exports = UserController;

@@ -94,7 +94,6 @@ class EventController {
       getEvents.forEach((event) => {
         playersNotified.push(event._id);
         const players = event.players;
-        console.log(event);
         const date = new Date(event.date).toLocaleDateString();
         players.forEach(async (player) => {
           const id = new ObjectId(player);
