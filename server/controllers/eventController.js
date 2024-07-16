@@ -2,6 +2,7 @@ const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
 const cloudinary = require('cloudinary').v2;
 const midtransClient = require('midtrans-client');
+const axios = require('axios')
 
 class EventController {
   static async getEvents(req, res) {
@@ -50,6 +51,9 @@ class EventController {
         updatedAt: new Date(),
         price: eventPrice,
       };
+
+      event.player.push(req.user._id)
+
       await db.collection('events').insertOne(event);
       res.send(event);
     } catch (error) {
@@ -64,21 +68,14 @@ class EventController {
       if (!event) {
         return res.status(404).send({ message: 'Event not found' });
       }
-      if (event.player.some(player => player._id.equals(req.user._id))) {
+      if (event.player.includes(req.user._id)) {
         return res.status(400).send({ message: 'User already joined the event' });
       }
       if (event.player.length >= event.quota) {
         return res.status(400).send({ message: 'Event is full' });
       }
-      event.player.push({
-        _id: req.user._id,
-        username: req.user.username,
-        avatar: req.user.avatar
-      });
-      await db.collection('events').updateOne(
-        { _id: new ObjectId(req.params.eventId) },
-        { $set: { player: event.player } }
-      );
+      event.player.push(req.user._id);
+      await db.collection('events').updateOne({ _id: new ObjectId(req.params.eventId) }, { $set: { player: event.player } });
       res.send(event);
     } catch (error) {
       res.status(400).send(error);
@@ -86,29 +83,57 @@ class EventController {
   }
   
 
+  static async sendPushNotification(token, message) {
+    const body = {
+      to: token,
+      sound: 'default',
+      title: 'Event Reminder',
+      body: message,
+      data: { message }
+    };
+
+    try {
+      const response = await axios.post('https://exp.host/--/api/v2/push/send', body, {
+        headers: {
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip, deflate',
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('Push notification sent:', response.data);
+    } catch (error) {
+      console.error('Error sending push notification:', error);
+    }
+  }
+
   static async checkEvent() {
     try {
       const today = new Date();
-      const oneDayAfter = new Date(today);
-      oneDayAfter.setDate(today.getDate() + 1);
-      const twoDaysAfter = new Date(today);
-      twoDaysAfter.setDate(today.getDate() + 2);
+      const oneDayAfter = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      const twoDayAfter = new Date(today.getTime() + 2 * 24 * 60 * 60 * 1000);
       const db = await getDb();
       let playersNotified = [];
+
       const getEvents = await db.collection('events').find({
         date: {
           $gt: oneDayAfter.toISOString(),
-          $lt: twoDaysAfter.toISOString()
+          $lt: twoDayAfter.toISOString()
         }
       }).toArray();
 
-      getEvents.forEach(async (event) => {
+      for (const event of getEvents) {
+        console.log('Event:', event);
         playersNotified.push(event._id);
-        const players = event.player;
-        console.log(event);
+        const players = event.player || [];
+        console.log('Players:', players);
+
         const date = new Date(event.date).toLocaleDateString();
-        players.forEach(async (player) => {
-          const id = new ObjectId(player._id);
+        for (const playerId of players) {
+          const id = new ObjectId(playerId);
+          const user = await db.collection('users').findOne({ _id: id });
+          if (user.pushToken) {
+            await EventController.sendPushNotification(user.pushToken, `Can you attend ${event.name} at ${date}?`);
+          }
           await db.collection('users').updateOne(
             { _id: id },
             {
@@ -121,50 +146,52 @@ class EventController {
               }
             }
           );
-        });
-      });
+        }
+      }
+
       let id = playersNotified.join(',');
       console.log(`Player(s) with ID(s) ${id} have been notified.`);
     } catch (error) {
-      console.log(error);
+      console.error('Error in checkEvent:', error);
     }
   }
 
   static async checkNotification() {
     try {
-      const today = new Date()
-      const yesterday = new Date()
-      yesterday.setDate(today.getDate() - 1)
-      const tommorow = new Date()
-      tommorow.setDate(today.getDate() + 1)
-      const db = await getDb()
-      const users = await db.collection("users").find().toArray()
-      users.forEach(async (user) => {
-        let banned = false
-        const notifIndex = []
-        let notifications = user.notification
-        notifications.forEach(async (notification, i) => {
-          if (notification.date === yesterday || notification.date > yesterday) {
-            banned = true
-            notifIndex.push(i)
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+      const db = await getDb();
+      const users = await db.collection("users").find().toArray();
+      for (const user of users) {
+        let banned = false;
+        const notifIndex = [];
+        let notifications = user.notification || [];
+        for (let i = 0; i < notifications.length; i++) {
+          const notification = notifications[i];
+          if (new Date(notification.createdAt) <= yesterday) {
+            banned = true;
+            notifIndex.push(i);
           }
-        })
-        const newNotif = notifications.filter((_,index) => !notifIndex.includes(index))
-        if (banned === true) {
-          const banUser = await db.collection("users").updateOne(
+        }
+        const newNotif = notifications.filter((_, index) => !notifIndex.includes(index));
+        if (banned) {
+          await db.collection("users").updateOne(
             { _id: user._id },
             {
               $set: {
                 status: {
                   ban: true,
-                  duration: tommorow.toISOString()
+                  duration: tomorrow.toISOString()
                 },
-                notifications: newNotif
+                notification: newNotif
               }
             }
-          )
+          );
         }
-      })
+      }
     } catch (error) {
       console.log(error);
     }
@@ -172,44 +199,68 @@ class EventController {
 
   static async unableToJoin(req, res, next) {
     try {
-      const { _id } = req.user
-      const { eventId } = req.params
-      const userId = new ObjectId(_id)
-      const db = await getDb()
-      const user = await db.collection("users").findOne({ _id: userId })
+      const { _id } = req.user;
+      const { eventId } = req.params;
+      const userId = new ObjectId(_id);
+      const db = await getDb();
+
+      console.log(`User ID: ${_id}`);
+      console.log(`Event ID: ${eventId}`);
+
+      const user = await db.collection("users").findOne({ _id: userId });
       if (!user) {
-        return res.status(404).json({ message: "Id not found" })
+        console.log("User not found");
+        return res.status(404).json({ message: "User not found" });
       }
-      const index = user.notification.findIndex(obj => obj._id === new ObjectId(eventId))
-      user.notification.splice(index, 1)
-      const updateNotif = await db.collection("users").updateOne(
-        { _id: new ObjectId(eventId) },
+
+      const notifications = user.notification || [];
+      console.log(`User notifications before update: ${JSON.stringify(notifications)}`);
+
+      const index = notifications.findIndex(obj => obj.eventId.equals(new ObjectId(eventId)));
+      if (index !== -1) {
+        notifications.splice(index, 1);
+      }
+      console.log(`User notifications after update: ${JSON.stringify(notifications)}`);
+
+      await db.collection("users").updateOne(
+        { _id: userId },
         {
           $set: {
-            notification: user.notification
+            notification: notifications
           }
         }
-      )
+      );
 
-      const event = await db.collection("events").findOne({ _id: new ObjectId(eventId) })
+      const event = await db.collection("events").findOne({ _id: new ObjectId(eventId) });
       if (!event) {
-        return res.status(404).json({ message: "Id not found" })
+        console.log("Event not found");
+        return res.status(404).json({ message: "Event not found" });
       }
-      const playerIndex = event.player.findIndex(obj => obj._id === userId)
-      event.player.splice(playerIndex, 1)
-      const updateEvent = await db.collection("ecents").updateOne(
+      console.log(`Event players before update: ${JSON.stringify(event.player)}`);
+
+      const playerIndex = event.player.findIndex(obj => obj.equals(userId));
+      if (playerIndex !== -1) {
+        event.player.splice(playerIndex, 1);
+      }
+      console.log(`Event players after update: ${JSON.stringify(event.player)}`);
+
+      await db.collection("events").updateOne(
         { _id: new ObjectId(eventId) },
         {
           $set: {
             player: event.player
           }
         }
-      )
-      res.status(201).json({ message: 'succesfully updated notification and event player' })
+      );
+
+      res.status(201).json({ message: 'Successfully updated notification and event player' });
     } catch (error) {
-      res.status(400).json(error)
+      console.error("Error in unableToJoin:", error);
+      res.status(400).json({ message: 'Error updating notification and event player', error });
     }
   }
+
+  
 
   static async createTransaction(req, res) {
     try {

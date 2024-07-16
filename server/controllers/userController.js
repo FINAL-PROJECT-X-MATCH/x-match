@@ -3,12 +3,15 @@ const jwt = require('jsonwebtoken');
 const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
 const cloudinary = require('cloudinary').v2;
+const { OAuth2Client } = require('google-auth-library');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 class UserController {
   static async register(req, res) {
@@ -20,6 +23,11 @@ class UserController {
         username,
         email,
         password: hashedPassword,
+        notification: [],
+        status: {
+          ban: false,
+          duration: ""
+        },
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -27,6 +35,52 @@ class UserController {
       const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
       res.status(201).send({
         access_token: token,
+        user: {
+          id: user._id.toString(),
+          username: user.username,
+          email: user.email
+        }
+      });
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  }
+
+  static async googleLogin(req, res) {
+    const { token } = req.body;
+
+    try {
+      const ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+      const { email, name } = payload;
+
+      const db = getDb();
+      let user = await db.collection('users').findOne({ email });
+
+      if (!user) {
+        user = {
+          username: name,
+          email,
+          password: null,
+          notification: [],
+          status: {
+            ban: false,
+            duration: ""
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        await db.collection('users').insertOne(user);
+      }
+
+      const jwtToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+      res.send({
+        access_token: jwtToken,
         user: {
           id: user._id.toString(),
           username: user.username,
@@ -185,6 +239,56 @@ class UserController {
       res.send(user.notification);
     } catch (error) {
       res.status(400).send({ message: 'Failed to get notifications', error });
+    }
+  }
+
+  static async notificationOK(req, res, next) {
+    // tujuan jika user bisa datang, notifikasi kehapus
+    try {
+      const { _id } = req.user
+      const { eventId } = req.params
+      const db = await getDb()
+      const user = await db.collection("users").findOne({ _id })
+      const notifications = user.notification
+      console.log(notifications, "sebelum di cut");
+      const indexNotif = notifications.findIndex(notification => {
+        return notification.eventId.equals(new ObjectId(eventId))
+      }
+      )
+      if (indexNotif === -1) {
+        res.status(201).json({
+          message: "Event id is not register to the user"
+        })
+      }
+      notifications.splice(indexNotif, 1)
+      const updateNotif = await db.collection("users").updateOne(
+        {_id},
+        {$set: {
+          notification: notifications
+        }}
+      )
+      res.status(201).json({
+        message: "succesfully delete notification"
+      })
+    } catch (error) {
+      res.status(500).send({ error: "internal server error" })
+    }
+  }
+
+  static async savePushToken(req, res) {
+    try {
+      const userId = req.user._id;
+      const { token } = req.body;
+
+      const db = await getDb();
+      await db.collection('users').updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { pushToken: token } }
+      );
+
+      res.status(200).json({ message: 'Push token saved successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
     }
   }
   

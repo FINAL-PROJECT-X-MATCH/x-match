@@ -109,7 +109,7 @@ const UpdateProfile: React.FC = () => {
             {image ? (
               <Image source={{ uri: image }} style={tw`w-32 h-32 rounded-full mb-4`} />
             ) : (
-              <Ionicons name="person-circle-outline" size={120} color="gray" />
+              <Ionicons name="person-circle-outline" size={120} color="#f97316" />
             )}
             <TouchableOpacity style={[tw`p-3 rounded-full mb-4 flex-row items-center`, { backgroundColor: 'rgb(249 115 22)' }]} onPress={pickImage}>
               <Ionicons name="image" size={24} color="white" style={tw`mr-2`} />

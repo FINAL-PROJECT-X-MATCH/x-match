@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity, Image, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { 
+  View, 
+  TextInput, 
+  Text, 
+  TouchableOpacity, 
+  Image, 
+  KeyboardAvoidingView, 
+  Platform, 
+  ActivityIndicator,
+  Animated,
+  StatusBar,
+  Dimensions
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { LinearGradient } from 'expo-linear-gradient';
+import Toast from 'react-native-toast-message';
 import tw from 'twrnc';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
@@ -13,75 +25,146 @@ type Props = {
   navigation: LoginScreenNavigationProp;
 };
 
-const LoginScreen = ({ navigation }: Props) => {
+const { height } = Dimensions.get('window');
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
+  const fadeAnim = new Animated.Value(0);
 
-  const handleLogin = async () => {
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const handleLogin = useCallback(async () => {
+    if (!email || !password) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please enter both email and password',
+      });
+      return;
+    }
     setLoading(true);
-    setError(null);
     try {
       await login(email, password);
-      setLoading(false);
     } catch (error) {
+      let errorMessage = 'An unexpected error occurred';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: errorMessage,
+      });
+    } finally {
       setLoading(false);
-      setError('Invalid email or password');
     }
-  };
+  }, [email, password, login]);
+
+  const handleGoogleLogin = useCallback(async () => {
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      Toast.show({
+        type: 'error',
+        text1: 'Google Login Failed',
+        text2: 'An error occurred during Google login',
+      });
+    }
+  }, [loginWithGoogle]);
 
   return (
     <KeyboardAvoidingView
-      style={tw`flex-1`}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+      style={tw`flex-1 bg-[#f97316]`}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
-      <LinearGradient colors={['rgb(234 88 12)', 'rgb(249 115 22)', 'rgb(253 186 116)']} style={tw`flex-1`}>
-        <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
-          <View style={tw`items-center mb-10`}>
-            <Image source={require('../../assets/LogoX-Match.png')} style={tw`w-40 h-40 mb-6`} />
-            <Text style={tw`text-white text-4xl font-bold`}>Welcome Back</Text>
-          </View>
-          {error && <Text style={tw`text-red-500 text-center mb-4`}>{error}</Text>}
-          <View style={tw`mb-4`}>
-            <View style={tw`flex-row items-center border border-gray-300 rounded-full p-3 mb-4 bg-gray-100 shadow-sm`}>
-              <Ionicons name="mail-outline" size={24} color="gray" style={tw`mr-2`} />
+      <StatusBar barStyle="light-content" backgroundColor="#f97316" />
+      <View style={tw`flex-1`}>
+        <View style={[tw`items-center justify-end`, { height: height * 0.45 }]}>
+          <Image 
+            source={require('../../assets/LogoX-Match.png')} 
+            style={tw`w-56 h-56 mb-4`}
+            resizeMode="contain"
+          />
+          <Text style={tw`text-white text-3xl font-bold mb-4`}>Welcome Back</Text>
+        </View>
+        
+        <Animated.View 
+          style={[
+            tw`bg-white rounded-t-[40px] px-8 pt-10 pb-8 flex-1`,
+            { 
+              opacity: fadeAnim,
+              transform: [{ 
+                translateY: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [50, 0]
+                })
+              }] 
+            }
+          ]}
+        >
+          <View style={tw`mb-6`}>
+            <View style={tw`bg-gray-100 rounded-xl flex-row items-center px-4 py-3 mb-4`}>
+              <Ionicons name="mail-outline" size={24} color="#f97316" style={tw`mr-3`} />
               <TextInput
                 placeholder="Enter Email"
                 value={email}
                 onChangeText={setEmail}
-                style={tw`flex-1 text-gray-800 text-lg`}
+                style={tw`flex-1 text-gray-800 text-base`}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                placeholderTextColor="#888"
+                placeholderTextColor="#9ca3af"
               />
             </View>
-            <View style={tw`flex-row items-center border border-gray-300 rounded-full p-3 bg-gray-100 shadow-sm`}>
-              <Ionicons name="lock-closed-outline" size={24} color="gray" style={tw`mr-2`} />
+            <View style={tw`bg-gray-100 rounded-xl flex-row items-center px-4 py-3 mb-4`}>
+              <Ionicons name="lock-closed-outline" size={24} color="#f97316" style={tw`mr-3`} />
               <TextInput
                 placeholder="Enter Password"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
-                style={tw`flex-1 text-gray-800 text-lg`}
-                placeholderTextColor="#888"
+                style={tw`flex-1 text-gray-800 text-base`}
+                placeholderTextColor="#9ca3af"
               />
             </View>
           </View>
-          <TouchableOpacity style={tw`bg-orange-600 p-4 rounded-full mb-4 shadow-md`} onPress={handleLogin}>
+          <TouchableOpacity 
+            style={tw`bg-[#f97316] py-4 rounded-xl mb-4 shadow-md`}
+            onPress={handleLogin}
+            disabled={loading}
+          >
             {loading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
               <Text style={tw`text-center text-lg font-bold text-white`}>Login</Text>
             )}
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={tw`text-center text-white`}>Don't have an account? Register Here</Text>
+          <TouchableOpacity 
+            style={tw`bg-white border border-gray-300 py-4 rounded-xl mb-4 shadow-sm flex-row justify-center items-center`}
+            onPress={handleGoogleLogin}
+          >
+            <Image 
+              source={require('../../assets/google-logo.png')} 
+              style={tw`w-5 h-5 mr-2`}
+              resizeMode="contain"
+            />
+            <Text style={tw`text-center text-base font-medium text-gray-700`}>Continue with Google</Text>
           </TouchableOpacity>
-        </ScrollView>
-      </LinearGradient>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+            <Text style={tw`text-center text-[#f97316] font-medium`}>Don't have an account? Register Here</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+      <Toast />
     </KeyboardAvoidingView>
   );
 };

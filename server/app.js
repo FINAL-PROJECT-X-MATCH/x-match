@@ -42,7 +42,7 @@ io.on('connection', (socket) => {
   });
 });
 
-timer.schedule('0 6 * * *', () => {
+timer.schedule('* 6 * * *', () => {
   EventController.checkEvent()
   EventController.checkNotification()
   UserController.checkStatus()
