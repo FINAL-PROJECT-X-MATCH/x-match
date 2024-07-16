@@ -127,18 +127,19 @@ class EventController {
       tommorow.setDate(today.getDate() + 1)
       const db = await getDb()
       const users = await db.collection("users").find().toArray()
-      users.forEach(async (user) => {
+      for(const user of users) {
         let banned = false
         const notifIndex = []
         let notifications = user.notification
-        notifications.forEach(async (notification, i) => {
+        for (let i = 0; i < notifications.length; i++) {
+          const notification = notifications[i];
           if (notification.date === yesterday || notification.date > yesterday) {
             banned = true
             notifIndex.push(i)
           }
-        })
+        }
         const newNotif = notifications.filter((_,index) => !notifIndex.includes(index))
-        if (banned === true) {
+        if (banned) {
           const banUser = await db.collection("users").updateOne(
             { _id: user._id },
             {
@@ -152,7 +153,7 @@ class EventController {
             }
           )
         }
-      })
+      }
     } catch (error) {
       console.log(error);
     }
