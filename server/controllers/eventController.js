@@ -16,7 +16,9 @@ class EventController {
   static async getEvent(req, res) {
     try {
       const db = getDb();
+      console.log(req.params.eventId, "ini di controller");
       const event = await db.collection('events').findOne({ _id: new ObjectId(req.params.eventId) });
+      console.log(event, "ini di cont");
       res.send(event);
     } catch (error) {
       res.status(400).send(error);
@@ -54,10 +56,11 @@ class EventController {
     try {
       const db = getDb();
       const event = await db.collection('events').findOne({ _id: new ObjectId(req.params.eventId) });
+      console.log(event, "===ini di cont===");
       if (!event) {
         return res.status(404).send({ message: 'Event not found' });
       }
-      if (event.player.includes(req.user._id)) {
+      if (event.player.some(obj => obj._id.equals(req.user._id))) {
         return res.status(400).send({ message: 'User already joined the event' });
       }
       if (event.player.length >= event.quota) {
@@ -69,6 +72,7 @@ class EventController {
         avatar: req.user.avatar
       });
       await db.collection('events').updateOne({ _id: new ObjectId(req.params.eventId) }, { $set: { player: event.player } });
+      console.log(event, "ini di cont");
       res.send(event);
     } catch (error) {
       res.status(400).send(error);
@@ -186,7 +190,7 @@ class EventController {
       }
       const playerIndex = event.player.findIndex(obj => obj._id === userId)
       event.player.splice(playerIndex, 1)
-      const updateEvent = await db.collection("ecents").updateOne(
+      const updateEvent = await db.collection("events").updateOne(
         { _id: new ObjectId(eventId) },
         {
           $set: {
