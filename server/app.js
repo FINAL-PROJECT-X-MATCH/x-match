@@ -27,13 +27,13 @@ app.use(chatRoutes);
 
 io.on('connection', (socket) => {
   console.log('New client connected');
-  
+
   socket.on('join', ({ eventId, userId }) => {
     socket.join(eventId);
   });
 
-  socket.on('sendMessage', ({ eventId, userId, message, username , image}) => {
-    const newMessage = { eventId, userId, message, username , image};
+  socket.on('sendMessage', ({ eventId, userId, message, username, image }) => {
+    const newMessage = { eventId, userId, message, username, image };
     io.to(eventId).emit('message', newMessage);
   });
 
@@ -42,7 +42,7 @@ io.on('connection', (socket) => {
   });
 });
 
-timer.schedule('* 6 * * *', () => {
+timer.schedule('0 6 * * *', () => {
   EventController.checkEvent()
   EventController.checkNotification()
   UserController.checkStatus()
@@ -55,12 +55,15 @@ const startServer = async () => {
   try {
     await connectDb();
     console.log('Connected to MongoDB');
-    server.listen(process.env.PORT, () => {
-      console.log(`Server running on port ${process.env.PORT}`);
-    });
+    // server.listen(process.env.PORT, () => {
+    //   console.log(`Server running on port ${process.env.PORT}`);
+    // });
   } catch (error) {
     console.error('Failed to connect to MongoDB', error);
   }
 };
 
 startServer();
+
+
+module.exports = app

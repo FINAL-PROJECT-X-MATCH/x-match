@@ -4,13 +4,12 @@ const { getDb } = require('../config/db');
 
 const auth = async (req, res, next) => {
   const authHeader = req.header('Authorization');
-
   if (!authHeader) {
     return res.status(401).send({ error: 'Authorization header not found' });
   }
 
   const token = authHeader.replace('Bearer ', '');
-
+  console.log(token, 'ini di auth');
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const db = getDb();
