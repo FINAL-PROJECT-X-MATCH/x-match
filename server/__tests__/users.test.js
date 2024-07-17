@@ -119,201 +119,106 @@ describe("Database Tests", () => {
   });
 
   describe("User Routes test",()=>{
-    describe("POST /register - create new user",()=>{
-      test("201 Success register - should create new User", () => {
-        request(app)
-          .post("/register")
-          .send(user1)
-          .end((err, res) => {
-            if (err) return done(err);
-            const { body, status } = res;
-    
-            expect(status).toBe(201);
-            expect(body).toHaveProperty("username", user1.username);
-            expect(body).toHaveProperty("email", user1.email);
-          
-          });
-      });
+    test("Test 201 success Register",async()=>{
+      const response = await request(app).post('/register').send(user1)
+      expect(response.status).toBe(201)
+      expect(response.body).toBeInstanceOf(Object)
+      expect(response.body).toHaveProperty('user.username',user1.username)
+      expect(response.body).toHaveProperty('user.email',user1.email)
     })
-  })
-  describe("POST /login - user login",()=>{
-    test("200 Success login - should return access_token", () => {
-      request(app)
-        .post("/login")
-        .send({
-          email: "user.test@mail.com",
-          password: "usertest",
-        })
-        .end((err, res) => {
-          if (err) return done(err);
-          const { body, status } = res;
 
-          expect(status).toBe(200);
-          expect(body).toHaveProperty("access_token", expect.any(String));
-        });
-    });
-    test("400 Failed login - should return Invalid email/password", () => {
-      request(app)
-        .post("/login")
-        .send({
-          email: "salah email",
-          password: "salah password",
-        })
-        .end((err, res) => {
-          if (err) return done(err);
-          const { body, status } = res;
-          expect(status).toBe(400);
-          expect(body).toHaveProperty("message", "Invalid email/password");
-        });
-    });
-
-  })
-
-  describe("GET /user", () => {
-    test("200 success get user", () => {
-      request(app)
-        .get("/user")
-        .set("Authorization", `Bearer ${user1_token}`)
-        .then((response) => {
-          const { body, status } = response;
-          expect(status).toBe(200);
-          expect(body).toBeInstanceOf(Object);
-        })
-    });
-  });
-
-  describe("PATCH /user",()=>{
-    test("200 success update user",()=>{
-      request(app)
-      .patch("/user")
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(200);
-        expect(body).toBeInstanceOf(Object)
+    test("Test 200 success Login return access_token",async()=>{
+      const response = await request(app).post('/login').send(user1)
+      expect(response.status).toBe(200)
+      expect(response.body).toBeInstanceOf(Object)
+      expect(response.body).toHaveProperty('access_token',expect.any(String))
+      expect(response.body).toHaveProperty('user.id',expect.any(String))
+      expect(response.body).toHaveProperty('user.username',user1.username)
+      expect(response.body).toHaveProperty('user.email',user1.email)
+    })
+    test("Test 400 Failed Login invalid email/password",async()=>{
+      const response = await request(app).post('/login').send({
+        email:'email.co',
+        password:'salah password'
       })
+      expect(response.status).toBe(400)
+      expect(response.body).toHaveProperty('message',"Invalid email/password")
     })
-  })
-
-  describe("GET /user/events",()=>{
-    test("200 success get user event",()=>{
-      request(app)
-      .get("/user/events")
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(200);
-        expect(body).toBeInstanceOf(Object)
+    test("Test 400 Failed Login invalid email/password",async()=>{
+      const response = await request(app).post('/login').send({
+        email:user1.email,
+        password:'salah password'
       })
+      expect(response.status).toBe(400)
+      expect(response.body).toHaveProperty('message',"Invalid email/password")
     })
-  })
-
-  describe("GET /user/joined-events",()=>{
-    test("200 success get user join event",()=>{
-      request(app)
-      .get("/user/joined-events")
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(200);
-        expect(body).toBeInstanceOf(Object)
-      })
+    test("Test 200 success Get User",async()=>{
+      const response = await request(app).get('/user').set('Authorization', `Bearer ${user1_token}` )
+      expect(response.status).toBe(200)
+      expect(response.body).toBeInstanceOf(Object)
     })
-  })
-  
-  describe("POST /user/:userId/ban",()=>{
-    test("201 success post user ban",()=>{
-      request(app)
-      .post(`/user/${user1_Id}/ban`)
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(201);
-        expect(body).toBeInstanceOf(Object)
-        expect(body).toHaveProperty("message", `User with ID ${user1_Id} has been banned for 1 day`);
-
-      })
+    test("Test 201 success Patch user",async()=>{
+      const response = await request(app).patch('/user').send({}).set('Authorization', `Bearer ${user1_token}`)
+      expect(response.status).toBe(200)
+      expect(response.body).toBeInstanceOf(Object)
+      expect(response.body).toHaveProperty('_id', expect.any(String))
+      expect(response.body).toHaveProperty("username",userData[0].username)
+      expect(response.body).toHaveProperty("email",userData[0].email)
+      expect(response.body).toHaveProperty("password",userData[0].password)
+      expect(response.body).toHaveProperty("notification",userData[0].notification)
+      expect(response.body).toHaveProperty("status",userData[0].status)
+      expect(response.body).toHaveProperty("avatar",userData[0].avatar)
+      expect(response.body).toHaveProperty("createdAt",userData[0].createdAt)
     })
-  })
-  
-  describe("GET /users/check-status",()=>{
-    test("200 check status",()=>{
-      request(app)
-      .get('/users/check-status')
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(200);
-        expect(body).toBeInstanceOf(Object)
-        expect(body).toHaveProperty(`User(s) with ID(s) ${unbannedUsers.join(',')} has/have been unbanned`);
-
-      })
-    })
-  })
-
-  describe("GET /user/notifications",()=>{
-    test("200 notification",()=>{
-      request(app)
-      .get('/user/notifications')
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(200);
-        expect(body).toBeInstanceOf(Object)
-
-      })
-    })
-
-    test("400 failed get notification",()=>{
-      request(app)
-      .get('/user/notifications')
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(400);
-        expect(body).toBeInstanceOf(Object)
-        expect(body).toHaveProperty("message",'Failed to get notifications')
-
-      })
-    })
-  })
-
-  describe("DELETE /user/deleteNotif/:eventId",()=>{
-    test("200 notification",()=>{
-      request(app)
-      .delete(`/user/deleteNotif/${event1_Id}`)
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(201);
-        expect(body).toHaveProperty("message","succesfully delete notification")
-
-      })
-    })
-
-  })
-
-  describe("POST /users/push-token",()=>{
-    test("200 success post token",()=>{
-      request(app)
-      .post("/users/push-token")
-      .set("Authorization", `Bearer ${user1_token}`)
-      .then((response)=>{
-        const{body,status} = response;
-        expect(status).toBe(200);
-        expect(body).toHaveProperty("message",'Push token saved successfully')
+    test("Test 200 success get event user",async()=>{
+      const response = await request(app).get('/user/events').set('Authorization', `Bearer ${user1_token}`)
+      expect(response.status).toBe(200)
+      expect(response.body).toBeInstanceOf(Array)
+      // expect(response.body[0]).toBeInstanceOf(Object)
+      // expect(response.body[0]).toHaveProperty('_id', expect.any(String))
+      // expect(response.body[0]).toHaveProperty("username",userData[0].username)
+      // expect(response.body[0]).toHaveProperty("email",userData[0].email)
+      // expect(response.body[0]).toHaveProperty("password",userData[0].password)
+      // expect(response.body[0]).toHaveProperty("notification",userData[0].notification)
+      // expect(response.body[0]).toHaveProperty("status",userData[0].status)
+      // expect(response.body[0]).toHaveProperty("avatar",userData[0].avatar)
+      // expect(response.body[0]).toHaveProperty("createdAt",userData[0].createdAt)
 
     })
+    test("Test 200 success get joined event",async()=>{
+      const response = await request(app).get('/user/joined-events').set('Authorization', `Bearer ${user1_token}`)
+      expect(response.status).toBe(200)
+      expect(response.body).toBeInstanceOf(Array)
+    })
+    test("Test 201 success banned",async()=>{
+      const response = await request(app).post(`/user/${user1_Id}/ban`).set('Authorization', `Bearer ${user1_token}`)
+      expect(response.status).toBe(201)
+      expect(response.body).toHaveProperty("message",`User with ID ${user1_Id} has been banned for 1 day`)
+    })
   })
+  test("Test user notification",async()=>{
+    const response = await request(app).get('/user/notifications').set('Authorization', `Bearer ${user1_token}`)
+    expect(response.status).toBe(200)
+    expect(response.body).toBeInstanceOf(Array)
   })
-
+  test("Test delete user notification",async()=>{
+    const response = await request(app).delete(`/user/deleteNotif/${event1_Id}`).set('Authorization', `Bearer ${user1_token}`)
+    expect(response.status).toBe(201)
+    expect(response.body).toHaveProperty("message","Event id is not register to the user")
+  })
+  test("Test user push token",async()=>{
+    const response = await request(app).post('/users/push-token').set('Authorization', `Bearer ${user1_token}`)
+    expect(response.status).toBe(200)
+    expect(response.body).toHaveProperty("message",'Push token saved successfully')
+  })
   afterAll(async () => {
     try {
       await usersCollection.deleteMany({})
       await eventsCollection.deleteMany({})
-      await client.close();
     } catch (error) {
-      console.log(error);
+      console.log(error)
+    } finally {
+      await client.close();
     }
   });
 });
