@@ -16,6 +16,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 class UserController {
   static async register(req, res) {
     try {
+      console.log(req.body,"<<<<<<<<<<<<ini req body");
       const { username, email, password } = req.body;
       console.log(req.body, "==== di register");
       const hashedPassword = await bcrypt.hash(password, 8);
