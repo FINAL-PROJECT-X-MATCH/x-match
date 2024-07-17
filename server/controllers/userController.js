@@ -17,6 +17,7 @@ class UserController {
   static async register(req, res) {
     try {
       const { username, email, password } = req.body;
+      console.log(req.body, "==== di register");
       const hashedPassword = await bcrypt.hash(password, 8);
       const db = getDb();
       const user = {

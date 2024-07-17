@@ -3,7 +3,7 @@ const { faker } = require("@faker-js/faker");
 const dotenv = require('dotenv');
 const request = require('supertest'); 
 const jwt = require('jsonwebtoken');
-const app = require("../app");
+const app = require("../../app");
 dotenv.config()
 jest.setTimeout(30000);
 
@@ -106,20 +106,17 @@ describe("POST /event/:eventId/join", () => {
       await usersCollection.insertMany(userData)
       const users = await usersCollection.find().toArray()
       user1_Id = users[0]._id
-      console.log(user1_Id, "ini id user 1");
       user1_token = jwt.sign({_id: user1_Id.toString()}, process.env.JWT_SECRET)
       user2_Id = users[1]._id
       user2_token = jwt.sign({_id: user2_Id.toString()}, process.env.JWT_SECRET)
       user3_Id = users[2]._id
       user3_token = jwt.sign({_id: user3_Id.toString()}, process.env.JWT_SECRET)
-
+      console.log(user1_token, "ini token user");
       eventsCollection = db.collection("events");
       await eventsCollection.insertMany(eventsData)
       const events = await eventsCollection.find().toArray()
-      console.log(events);
       event1_Id = events[0]._id
       event1_Id = event1_Id.toString()
-      console.log(event1_Id);
     } catch (err) {
       console.error("Error connecting to the database:", err);
     }
@@ -169,7 +166,7 @@ describe("POST /event/:eventId/join", () => {
   })
 
   test("WRONG AUTH", async () => {
-    const wrongAuth = "wrong access_token"
+    const wrongAuth = " eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2Njk3MzY4Nzg4NGQ1NWI3ZTdiZWYxODYiLCJpYXQiOjE3MjExODU52jd9.q2QDg3ICLb6juYz9pRT1awExlNlWtG4TdWXjQIse_xE"
     const response = await request(app).post(`/event/${event1_Id}/join`).set('authorization', `Bearer ${wrongAuth}` )
     expect(response.status).toBe(401)
     expect(response.body).toBeInstanceOf(Object)

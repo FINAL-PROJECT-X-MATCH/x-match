@@ -3,12 +3,12 @@ const { faker } = require("@faker-js/faker");
 const dotenv = require('dotenv');
 const request = require('supertest'); 
 const jwt = require('jsonwebtoken');
-const app = require("../app");
+const app = require("../../app");
+app
 dotenv.config()
 jest.setTimeout(30000);
 
 const uri = process.env.MONGO_URI
-console.log(uri), "ini uri";
 
 const client = new MongoClient(uri);
 
@@ -133,10 +133,18 @@ describe("GET /events/:eventId", () => {
     expect(response.body).toHaveProperty('createdAt',  eventsData[0].createdAt)
     expect(response.body).toHaveProperty('updatedAt',  eventsData[0].updatedAt)
   }, 30000);
+
+  test("WRONG event Id", async () => {
+    const wrongEventId = '669789da2485a460a7417fb1'
+    const response = await request(app).get(`/event/${wrongEventId}`).set('authorization', `Bearer ${user1_token}` )
+    expect(response.status).toBe(401)
+    expect(response.body).toBeInstanceOf(Object)
+    expect(response.body).toHaveProperty("error", "Please authenticate.")
+  })
   
   test("WRONG AUTH", async () => {
     const wongAuth = "wrong access_token"
-    const response = await request(app).get('/events').set('authorization', `Bearer ${wongAuth}` )
+    const response = await request(app).get('/event/${event1_Id}').set('authorization', `Bearer ${wongAuth}` )
     expect(response.status).toBe(401)
     expect(response.body).toBeInstanceOf(Object)
     expect(response.body).toHaveProperty("error", "Please authenticate.")

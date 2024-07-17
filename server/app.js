@@ -42,22 +42,22 @@ io.on('connection', (socket) => {
   });
 });
 
-timer.schedule('* 6 * * *', () => {
-  EventController.checkEvent()
-  EventController.checkNotification()
-  UserController.checkStatus()
-  }, {
-    scheduled: true,
-    timezone: "Asia/Jakarta"
-  })
+// timer.schedule('0 6 * * *', () => {
+//   EventController.checkEvent()
+//   EventController.checkNotification()
+//   UserController.checkStatus()
+//   }, {
+//     scheduled: true,
+//     timezone: "Asia/Jakarta"
+//   })
 
 const startServer = async () => {
   try {
     await connectDb();
     console.log('Connected to MongoDB');
-    server.listen(process.env.PORT, () => {
-      console.log(`Server running on port ${process.env.PORT}`);
-    });
+    // server.listen(process.env.PORT, () => {
+    //   console.log(`Server running on port ${process.env.PORT}`);
+    // });
   } catch (error) {
     console.error('Failed to connect to MongoDB', error);
   }

@@ -11,7 +11,7 @@ const uri = process.env.MONGO_URI
 
 const client = new MongoClient(uri);
 
-describe("DELETE /event/:eventId", () => {
+describe("POST /midtrans/transaction", () => {
   let eventsCollection;
   let usersCollection
   let userData = [{
@@ -164,36 +164,28 @@ describe("DELETE /event/:eventId", () => {
     }
   });
 
-  test("Test Success unableToJoin", async () => {
-    const response = await request(app).delete(`/event/${event1_Id}`).set('Authorization', `Bearer ${user1_token}`)
-    expect(response.status).toBe(201)
+  test("Test Success createTransaction", async () => {
+    const body = {
+      eventId: event1_Id,
+      amount: 5000
+    }
+    const response = await request(app).post(`/midtrans/transaction`).send(body).set('Authorization', `Bearer ${user1_token}`)
+    expect(response.status).toBe(200)
     expect(response.body).toBeInstanceOf(Object)
-    expect(response.body).toHaveProperty("message", "Successfully updated notification and event player")
+    expect(response.body).toHaveProperty("token", expect.any(String))
 
   })
 
   test("Test fail wrong event id", async () => {
     const wrongEventId = '669764feeeaf446d711c7433'
-    const response = await request(app).delete(`/event/${wrongEventId}`).set('Authorization', `Bearer ${user2_token}`)
+    const body = {
+      eventId: new ObjectId(wrongEventId),
+      amount: 5000
+    }
+    const response = await request(app).post(`/midtrans/transaction`).send(body).set('Authorization', `Bearer ${user2_token}`)
     expect(response.status).toBe(404)
     expect(response.body).toBeInstanceOf(Object)
     expect(response.body).toHaveProperty("message", "Event not found")
-  })
-
-
-  test("WRONG AUTH", async () => {
-    const wrongAuth = "wrong access_token"
-    const response = await request(app).post(`/event/${event1_Id}/join`).set('authorization', `Bearer ${wrongAuth}`)
-    expect(response.status).toBe(401)
-    expect(response.body).toBeInstanceOf(Object)
-    expect(response.body).toHaveProperty("error", "Please authenticate.")
-  })
-
-  test("No auth", async () => {
-    const response = await request(app).post(`/event/${event1_Id}/join`)
-    expect(response.status).toBe(401)
-    expect(response.body).toBeInstanceOf(Object)
-    expect(response.body).toHaveProperty("error", "Authorization header not found")
   })
 
   afterAll(async () => {

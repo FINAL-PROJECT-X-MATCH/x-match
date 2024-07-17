@@ -3,7 +3,7 @@ const { faker } = require("@faker-js/faker");
 const dotenv = require('dotenv');
 const request = require('supertest'); 
 const jwt = require('jsonwebtoken');
-const app = require("../app");
+const app = require("../../app");
 dotenv.config()
 jest.setTimeout(30000);
 
