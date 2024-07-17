@@ -114,7 +114,8 @@ describe("GET /events", () => {
   });
 
   test("Test GET EVENTS", async () => {
-    const response = await request(app).get('/events').set('authorization', `Bearer ${user1_token}` )
+    const response = await request(app).get('/events').set('authorization', `Bearer ${user1_token}`)
+    
     expect(response.status).toBe(200)
     expect(response.body).toBeInstanceOf(Array)
     expect(response.body[0]).toBeInstanceOf(Object)

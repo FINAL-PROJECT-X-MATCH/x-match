@@ -219,9 +219,8 @@ class EventController {
       
       if (index !== -1) {
         notifications.splice(index, 1);
-      } else if (index === -1) {
-        return res.status(404).json({ message: "Event not found" });
-      }
+      } 
+      
       console.log(`User notifications after update: ${JSON.stringify(notifications)}`);
 
       await db.collection("users").updateOne(
@@ -305,7 +304,7 @@ class EventController {
         updatedAt: new Date()
       };
       await db.collection('transactions').insertOne(transactionData);
-
+      console.log(transaction.token, "<<<<<<<")
       res.send({ token: transaction.token });
     } catch (error) {
       res.status(400).send(error);

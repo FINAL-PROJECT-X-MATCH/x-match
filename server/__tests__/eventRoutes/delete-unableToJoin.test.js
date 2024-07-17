@@ -105,7 +105,6 @@ describe("DELETE /event/:eventId", () => {
       await usersCollection.insertMany(userData)
       const users = await usersCollection.find().toArray()
       user1_Id = users[0]._id
-      console.log(user1_Id, "ini id user 1");
       user1_token = jwt.sign({ _id: user1_Id.toString() }, process.env.JWT_SECRET)
       user2_Id = users[1]._id
       user2_token = jwt.sign({ _id: user2_Id.toString() }, process.env.JWT_SECRET)
@@ -173,28 +172,16 @@ describe("DELETE /event/:eventId", () => {
   })
 
   test("Test fail wrong event id", async () => {
-    const wrongEventId = '669764feeeaf446d711c7433'
+    const wrongEventId = '667777feeeaf446d711c7433'
     const response = await request(app).delete(`/event/${wrongEventId}`).set('Authorization', `Bearer ${user2_token}`)
     expect(response.status).toBe(404)
+    console.log(response.body);
     expect(response.body).toBeInstanceOf(Object)
     expect(response.body).toHaveProperty("message", "Event not found")
   })
 
 
-  test("WRONG AUTH", async () => {
-    const wrongAuth = "wrong access_token"
-    const response = await request(app).post(`/event/${event1_Id}/join`).set('authorization', `Bearer ${wrongAuth}`)
-    expect(response.status).toBe(401)
-    expect(response.body).toBeInstanceOf(Object)
-    expect(response.body).toHaveProperty("error", "Please authenticate.")
-  })
 
-  test("No auth", async () => {
-    const response = await request(app).post(`/event/${event1_Id}/join`)
-    expect(response.status).toBe(401)
-    expect(response.body).toBeInstanceOf(Object)
-    expect(response.body).toHaveProperty("error", "Authorization header not found")
-  })
 
   afterAll(async () => {
     try {

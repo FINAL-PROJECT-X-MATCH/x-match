@@ -1,12 +1,14 @@
 const { MongoClient } = require("mongodb");
-const { faker } = require("@faker-js/faker");
+const fs = require("fs")
+const path = require("path")
 const dotenv = require('dotenv');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require("../../app");
 dotenv.config()
 jest.setTimeout(30000);
-
+const filePath = path.resolve(__dirname, "../../assets/images.jpeg")
+const imageBuffer = fs.readFileSync(filePath)
 const uri = process.env.MONGO_URI
 console.log(uri), "ini uri";
 
@@ -115,19 +117,30 @@ describe("post /event", () => {
 
     test("Test CREATE EVENT", async () => {
         const body = {
-            name: 'test', 
-            category: 'renang', 
-            address: "Jalan bukit tinggi VIX" , 
-            date: new Date(), 
-            quota: '5', 
-            description: "berenang bersama", 
-            location: {
+            name: 'test',
+            category: 'renang',
+            address: "Jalan bukit tinggi VIX",
+            date: new Date(),
+            quota: '5',
+            description: "berenang bersama",
+            location: JSON.stringify({
                 latitude: '1.21542',
                 longitude: '-15.2153'
-            }, 
+            }),
             price: 1000
         }
-        const response = await request(app).post('/event').send(body).set('Authorization', `Bearer ${user1_token}`)
+        const response = await request(app)
+            .post('/event')
+            .set('Authorization', `Bearer ${user1_token}`)
+            .field('name', body.name)
+            .field('category', body.category)
+            .field('address', body.address)
+            .field('date', body.date.toISOString())
+            .field('quota', body.quota)
+            .field('description', body.description)
+            .field('location', body.location)
+            .field('price', body.price)
+            .attach('imageLocation', imageBuffer, 'images.jpeg');
         expect(response.status).toBe(200)
         expect(response.body).toBeInstanceOf(Object)
         expect(response.body).toHaveProperty('name', body.name)
