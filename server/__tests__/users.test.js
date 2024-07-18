@@ -3,6 +3,7 @@ const request = require("supertest");
 const jwt = require('jsonwebtoken');
 const { MongoClient} = require("mongodb");
 const { faker } = require("@faker-js/faker");
+const UserController = require("../controllers/userController");
 jest.setTimeout(30000);
 
 const uri = process.env.MONGO_URI
@@ -221,6 +222,49 @@ describe("Database Tests", () => {
     expect(response.body).toHaveProperty('user.id',expect.any(String))
     expect(response.body).toHaveProperty('user.username',expect.any(String))
     expect(response.body).toHaveProperty('user.email',expect.any(String))
+  },30000)
+  describe("Test Check Status",()=>{
+    test("Test Check Status unbanned",async()=>{
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      const response = await UserController.checkStatus()
+      const user = await usersCollection.find({
+        "status.ban": true,
+        "status.duration": {
+          $ne: "",
+          $lt: yesterday.toISOString()
+        }
+      }).toArray();
+       expect(user.length).toBe(0)
+    })
+    test("Test check Status Banned",async()=>{
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      const tomorrow = new Date();
+      await usersCollection.updateOne(
+        { _id: user1_Id },
+        {
+          $set: {
+            status: {
+              ban: true,
+              duration: tomorrow.toISOString()
+            }
+          }
+        }
+      )
+      const response = await UserController.checkStatus()
+      const user = await usersCollection.find({
+        "status.ban": true,
+        "status.duration": {
+          $ne: "",
+          $lt: yesterday.toISOString()
+        }
+      }).toArray();
+      expect(user.length).toBe(0)
+    })
+
   })
 
   afterAll(async () => {

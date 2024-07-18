@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.38% </span>
+                <span class="strong">75.8% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>91/124</span>
+                <span class='fraction'>94/124</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.33% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>11/15</span>
+                <span class='fraction'>12/15</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">73.98% </span>
+                <span class="strong">76.42% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>91/123</span>
+                <span class='fraction'>94/123</span>
             </div>
         
             
@@ -416,13 +416,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -438,18 +438,18 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -515,21 +515,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -713,13 +713,13 @@ class UserController {
         audience: process.env.GOOGLE_CLIENT_ID,
       });
 &nbsp;
-      const payload = ticket.getPayload();
-      const { email, name } = payload;
+      const payload = <span class="cstat-no" title="statement not covered" >ticket.getPayload();</span>
+      const { email, name } = <span class="cstat-no" title="statement not covered" >payload;</span>
 &nbsp;
-      const db = getDb();
-      let user = await db.collection('users').findOne({ email });
+      const db = <span class="cstat-no" title="statement not covered" >getDb();</span>
+      let user = <span class="cstat-no" title="statement not covered" >await db.collection('users').findOne({ email });</span>
 &nbsp;
-      <span class="missing-if-branch" title="if path not taken" >I</span>if (!user) {
+<span class="cstat-no" title="statement not covered" >      if (!user) {</span>
 <span class="cstat-no" title="statement not covered" >        user = {</span>
           username: name,
           email,
@@ -735,9 +735,9 @@ class UserController {
 <span class="cstat-no" title="statement not covered" >        await db.collection('users').insertOne(user);</span>
       }
 &nbsp;
-      const jwtToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+      const jwtToken = <span class="cstat-no" title="statement not covered" >jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });</span>
 &nbsp;
-      res.send({
+<span class="cstat-no" title="statement not covered" >      res.send({</span>
         access_token: jwtToken,
         user: {
           id: user._id.toString(),
@@ -746,7 +746,7 @@ class UserController {
         }
       });
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      res.status(400).send(error);</span>
+      res.status(400).send(error);
     }
   }
 &nbsp;
@@ -811,23 +811,23 @@ class UserController {
     }
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  st</span>atic async checkStatus() {
-<span class="cstat-no" title="statement not covered" >    try {</span>
-      const today = <span class="cstat-no" title="statement not covered" >new Date();</span>
-      const yesterday = <span class="cstat-no" title="statement not covered" >new Date();</span>
-<span class="cstat-no" title="statement not covered" >      yesterday.setDate(today.getDate() - 1);</span>
-      const db = <span class="cstat-no" title="statement not covered" >await getDb();</span>
-      let unbannedUsers = <span class="cstat-no" title="statement not covered" >[];</span>
-      const users = <span class="cstat-no" title="statement not covered" >await db.collection('users').find({</span>
+  static async checkStatus() {
+    try {
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+      const db = await getDb();
+      let unbannedUsers = [];
+      const users = await db.collection('users').find({
         "status.ban": true,
         "status.duration": {
           $ne: "",
           $lt: yesterday.toISOString()
         }
       }).toArray();
-<span class="cstat-no" title="statement not covered" >      if (users.length === 0) {</span>
-<span class="cstat-no" title="statement not covered" >        console.log("User not found");</span>
-      } else <span class="cstat-no" title="statement not covered" >if (users.length &gt; 0) {</span>
+      if (users.length === 0) {
+        console.log("User not found");
+      } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (users.length &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >        users.forEach(<span class="fstat-no" title="function not covered" >as</span>ync (user) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >          unbannedUsers.push(user._id);</span>
           const _id = <span class="cstat-no" title="statement not covered" >user._id;</span>
@@ -961,7 +961,7 @@ module.exports = UserController;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2024-07-18T02:41:56.576Z
+                at 2024-07-18T04:22:30.562Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
