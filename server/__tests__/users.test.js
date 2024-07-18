@@ -14,6 +14,7 @@ const user1 = {
   email: "user.test@mail.com",
   password: "usertest",
 };
+const google_token ="eyJhbGciOiJSUzI1NiIsImtpZCI6IjBlMzQ1ZmQ3ZTRhOTcyNzFkZmZhOTkxZjVhODkzY2QxNmI4ZTA4MjciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyOTUwNzYzODkyNTgtMnQ0aWhkbmVwaTJzbm52Mm1nbmt2dmZvOWU0cWI5NWguYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyOTUwNzYzODkyNTgtMnQ0aWhkbmVwaTJzbm52Mm1nbmt2dmZvOWU0cWI5NWguYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTM4OTQ1ODU0MjY5NTYxODEyNDciLCJlbWFpbCI6InNldG95dWRpYXJnb0BnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmJmIjoxNzIxMjY5MDI4LCJuYW1lIjoic2V0byB5dWRpYXJnbyIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BQ2c4b2NLMUtVU2RnRXBMZkREajdkZkYtLUJZUVNueDdoX3NRdGc0R1ZiRGw0N3UwRnBvWUowPXM5Ni1jIiwiZ2l2ZW5fbmFtZSI6InNldG8iLCJmYW1pbHlfbmFtZSI6Inl1ZGlhcmdvIiwiaWF0IjoxNzIxMjY5MzI4LCJleHAiOjE3MjEyNzI5MjgsImp0aSI6IjM4MmQ5MTYxNGZiOTQxOGQwZTE0NmMwNWE0Y2ZlMTljMjkzMDhhZTUifQ.EwEF_XXfvGbFagnQmlIvLOjo50kQb_fzPkrzYDqdEOy1DZuimjKKW67091gYIW5dHdus8_-TTZBdslioKjcbLrWoDYGsbn1USvR-5YicwEFY9BOOw1cpEiUJX7cy0Vl1rwsYAZNvaRm3fiI38zmNaEqRqDH9JhCNRDOQpKXjL9ktRZBjSEOIHgVI7tODt2jMeer9vaUGXxRHT8gwjGNGi_vuZVZPYGOhX5KvPI6qb1b4DGUDCcAltjKnYcZMIsuA_swtGciDb-g0ZsYzgNYbvieqkGMJnrRkM7iLu7JF3K0q_YMSwXL8X82Ekch-XIoZZG2MdMtQabG_6gnT5TFtBA"
 let userData = [{
   "username": "user1",
   "email": "user1@mail.com",
@@ -211,6 +212,17 @@ describe("Database Tests", () => {
     expect(response.status).toBe(200)
     expect(response.body).toHaveProperty("message",'Push token saved successfully')
   })
+
+  test("Test 200 success google-login return access_token",async()=>{
+    const response = await request(app).post('/google-login').send({token:google_token})
+    expect(response.status).toBe(200)
+    expect(response.body).toBeInstanceOf(Object)
+    expect(response.body).toHaveProperty('access_token',expect.any(String))
+    expect(response.body).toHaveProperty('user.id',expect.any(String))
+    expect(response.body).toHaveProperty('user.username',expect.any(String))
+    expect(response.body).toHaveProperty('user.email',expect.any(String))
+  })
+
   afterAll(async () => {
     try {
       await usersCollection.deleteMany({})

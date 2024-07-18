@@ -48,7 +48,6 @@ class UserController {
 
   static async googleLogin(req, res) {
     const { token } = req.body;
-
     try {
       const ticket = await client.verifyIdToken({
         idToken: token,
