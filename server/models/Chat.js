@@ -10,6 +10,7 @@ const createChat = async (chat) => {
 const getChatsByEventId = async (eventId) => {
   const db = getDb();
   const chats = await db.collection('chats').find({ eventId: new ObjectId(eventId) }).toArray();
+  console.log(chats, "ini di get chat by event id");
   return chats;
 };
 

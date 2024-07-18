@@ -52,13 +52,11 @@ class EventController {
         updatedAt: new Date(),
         price: eventPrice,
       };
-      console.log(event, 'ini event');
       event.player.push(req.user._id)
 
       await db.collection('events').insertOne(event);
       res.send(event);
     } catch (error) {
-      console.log(error);
       res.status(400).send(error);
     }
   }
@@ -257,7 +255,6 @@ class EventController {
 
       res.status(201).json({ message: 'Successfully updated notification and event player' });
     } catch (error) {
-      console.error("Error in unableToJoin:", error);
       res.status(400).json({ message: 'Error updating notification and event player', error });
     }
   }
