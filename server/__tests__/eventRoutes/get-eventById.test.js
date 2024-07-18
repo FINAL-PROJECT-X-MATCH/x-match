@@ -137,9 +137,9 @@ describe("GET /events/:eventId", () => {
   test("WRONG event Id", async () => {
     const wrongEventId = '669789da2485a460a7417fb1'
     const response = await request(app).get(`/event/${wrongEventId}`).set('authorization', `Bearer ${user1_token}` )
-    expect(response.status).toBe(401)
+    expect(response.status).toBe(404)
     expect(response.body).toBeInstanceOf(Object)
-    expect(response.body).toHaveProperty("error", "Please authenticate.")
+    expect(response.body).toHaveProperty("message", "Event not found")
   })
   
   test("WRONG AUTH", async () => {

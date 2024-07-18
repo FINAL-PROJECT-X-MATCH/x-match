@@ -7,4 +7,4 @@ const router = express.Router();
 router.post('/chats', auth, ChatController.uploadImage, ChatController.postChat);
 router.get('/chats/:eventId', auth, ChatController.getChats);
 
-module.exports = router;
+module.exports = router;++++++++++++++++++++++++++++++++++

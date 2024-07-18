@@ -334,7 +334,6 @@ class EventController {
   
       res.status(200).send({ message: 'Transaction status updated' });
     } catch (error) {
-      console.log(error);
       res.status(400).send(error);
     }
   }

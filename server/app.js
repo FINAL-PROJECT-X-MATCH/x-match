@@ -42,14 +42,14 @@ io.on('connection', (socket) => {
   });
 });
 
-timer.schedule('0 6 * * *', () => {
-  EventController.checkEvent()
-  EventController.checkNotification()
-  UserController.checkStatus()
-  }, {
-    scheduled: true,
-    timezone: "Asia/Jakarta"
-  })
+// timer.schedule('0 6 * * *', () => {
+//   EventController.checkEvent()
+//   EventController.checkNotification()
+//   UserController.checkStatus()
+//   }, {
+//     scheduled: true,
+//     timezone: "Asia/Jakarta"
+//   })
 
 const startServer = async () => {
   try {

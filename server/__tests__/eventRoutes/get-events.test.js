@@ -104,7 +104,7 @@ describe("GET /events", () => {
 
       eventsCollection = db.collection("events");
       await eventsCollection.insertMany(eventsData)
-      const events = await usersCollection.find().toArray()
+      const events = await eventsCollection.find().toArray()
       event1_Id = events[0]._id
       event2_Id = events[1]._id
 

@@ -1,20 +1,24 @@
 const { MongoClient } = require("mongodb");
-const fs = require("fs")
-const path = require("path")
+const { faker } = require("@faker-js/faker");
 const dotenv = require('dotenv');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require("../../app");
+const EventController = require("../../controllers/eventController");
 dotenv.config()
 jest.setTimeout(30000);
-const filePath = path.resolve(__dirname, "../../assets/images.jpeg")
-const imageBuffer = fs.readFileSync(filePath)
+
 const uri = process.env.MONGO_URI
 console.log(uri), "ini uri";
 
 const client = new MongoClient(uri);
 
-describe("post /event", () => {
+describe("check notification", () => {
+    let now = new Date();
+    let eventDate = now.getTime() + (1.5 * 24 * 60 * 60 * 1000);
+    eventDate = (new Date(eventDate)).toISOString()
+    let yesterday = now.getTime() - (1.5 * 24 * 60 * 60 * 1000)
+    yesterday = (new Date(yesterday)).toISOString()
     let eventsCollection;
     let usersCollection
     let userData = [{
@@ -45,7 +49,7 @@ describe("post /event", () => {
             "name": "Fun Futsal",
             "category": "Futsal",
             "address": "",
-            "date": "2024-07-20T02:36:00.000Z",
+            "date": eventDate,
             "quota": "5",
             "description": "Mari olahraga supaya sehat",
             "location": {
@@ -56,9 +60,6 @@ describe("post /event", () => {
             "author": "66948b2fcc42652aedc14e2e",
             "authorUsername": "bayu5@mail.com",
             "player": [
-                "66949263cc42652aedc14e33",
-                "66948b2fcc42652aedc14e2e",
-                "6694e8a430ce579661f6e86d"
             ],
             "createdAt": "2024-07-15T02:42:48.936Z",
             "updatedAt": "2024-07-15T02:42:48.936Z"
@@ -67,7 +68,7 @@ describe("post /event", () => {
             "name": "adu siput",
             "category": "Futsal",
             "address": "GGP5+V7 Pelayang, Tebo Regency, Jambi, Индонезия",
-            "date": "2024-07-31T03:07:00.000Z",
+            "date": eventDate,
             "quota": "2",
             "description": "lomba adu siput",
             "location": {
@@ -77,9 +78,7 @@ describe("post /event", () => {
             "imageLocation": "https://res.cloudinary.com/dswmqbrqi/image/upload/v1721012993/ktqpuzamyyxfeedlq3fe.jpg",
             "author": "66949263cc42652aedc14e33",
             "authorUsername": "1",
-            "player": [
-                "6694af730e0a195c77e03f9b"
-            ],
+            "player": [],
             "createdAt": "2024-07-15T03:09:54.151Z",
             "updatedAt": "2024-07-15T03:09:54.151Z"
         }
@@ -110,43 +109,44 @@ describe("post /event", () => {
             event1_Id = events[0]._id
             event2_Id = events[1]._id
 
+            const updatePlayer = await eventsCollection.updateOne(
+                { _id: event1_Id },
+                {
+                    $set: {
+                        player: [user1_Id, user2_Id]
+                    }
+                }
+            )
+
+            const updateNotifUser = await usersCollection.updateOne(
+                { _id: user1_Id },
+                {
+                    $set: {
+                        notification: [
+                            {
+                                eventId: event1_Id,
+                                message: `Can you attend acara at tanggal?`,
+                                createdAt: yesterday
+                            }
+                        ]
+                    }
+                }
+            )
+
         } catch (err) {
             console.error("Error connecting to the database:", err);
         }
     });
 
-    test("Test CREATE EVENT", async () => {
-        const body = {
-            name: 'test',
-            category: 'renang',
-            address: "Jalan bukit tinggi VIX",
-            date: new Date(),
-            quota: '5',
-            description: "berenang bersama",
-            location: JSON.stringify({
-                latitude: '1.21542',
-                longitude: '-15.2153'
-            }),
-            price: 1000
-        }
-        const response = await request(app)
-            .post('/event')
-            .set('Authorization', `Bearer ${user1_token}`)
-            .field('name', body.name)
-            .field('category', body.category)
-            .field('address', body.address)
-            .field('date', body.date.toISOString())
-            .field('quota', body.quota)
-            .field('description', body.description)
-            .field('location', body.location)
-            .field('price', body.price)
-            .attach('imageLocation', imageBuffer, 'images.jpeg');
-        expect(response.status).toBe(200)
-        expect(response.body).toBeInstanceOf(Object)
-        expect(response.body).toHaveProperty('name', body.name)
-        expect(response.body).toHaveProperty('category', body.category)
-        expect(response.body).toHaveProperty('address', body.address)
+    test("Test check event", async () => {
+        const response = await EventController.checkNotification()
+        const updatedUser = await usersCollection.findOne({ _id: user1_Id })
+        console.log(updatedUser, "ini updated User")
+        expect(updatedUser.status).toBeInstanceOf(Object)
+        expect(updatedUser.status).toHaveProperty("ban", true)
+        expect(updatedUser.status).toHaveProperty("duration", expect.any(String))
     }, 30000);
+
 
     afterAll(async () => {
         try {
