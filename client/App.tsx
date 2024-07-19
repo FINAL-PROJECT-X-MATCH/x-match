@@ -10,7 +10,7 @@ export default function App() {
     registerForPushNotificationsAsync();
 
     
-    const trigger = new Date(Date.now() + 60 * 1000);
+    const trigger = new Date(Date.now() + 600 * 1000);
     scheduleLocalNotification('X-Match', 'Welcome to X-Match', {}, trigger);
   }, []);
 

@@ -14,6 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.ilhamindhi.client",
       "config": {
         "googleMapsApiKey": "AIzaSyCOi8-TXQCmG5SztxcWJCGClqGlaNZ53Eo"
       }
@@ -27,13 +28,19 @@
         "googleMaps": {
           "apiKey": "AIzaSyCOi8-TXQCmG5SztxcWJCGClqGlaNZ53Eo"
         }
-      }
+      },
+      "package": "com.ilhamindhi.client"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d1abab68-ee36-4721-aa26-65719b515802"
+      }
+    }
   }
 }

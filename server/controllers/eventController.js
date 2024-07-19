@@ -64,17 +64,19 @@ class EventController {
   static async joinEvent(req, res) {
     try {
       const db = getDb();
+      console.log(req.user._id, "ini user id")
       const event = await db.collection('events').findOne({ _id: new ObjectId(req.params.eventId) });
       if (!event) {
         return res.status(404).send({ message: 'Event not found' });
       }
-      if (event.player.includes(req.user._id)) {
+      if (event.player.map(playerId => playerId.toString()).includes(req.user._id.toString())) {
         return res.status(400).send({ message: 'User already joined the event' });
       }
       if (event.player.length >= event.quota) {
         return res.status(400).send({ message: 'Event is full' });
       }
       event.player.push(req.user._id);
+      console.log(event);
       await db.collection('events').updateOne({ _id: new ObjectId(req.params.eventId) }, { $set: { player: event.player } });
       res.send(event);
     } catch (error) {

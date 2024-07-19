@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { 
   View, Text, ActivityIndicator, ScrollView, TouchableOpacity, 
-  Image, Alert, Animated, Dimensions, Easing
+  Image, Alert, Animated, Dimensions
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MapView, { Marker } from 'react-native-maps';
@@ -79,7 +79,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           headers: { Authorization: `Bearer ${user.token}` }
         });
         setEvent(response.data);
-        setIsJoined(response.data.player.includes(user.id))
+        setIsJoined(response.data.player.includes(user.id));
       } catch (error) {
         console.error(error);
       }
@@ -93,11 +93,16 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
     }).format(amount);
   };
 
+  const getDiscountedPrice = (price: number) => {
+    return user?.member === 'premium' ? price * 0.8 : price;
+  };
+
   const handlePayment = async () => {
     try {
+      const price = getDiscountedPrice(event?.price as number);
       const response = await axiosInstance.post('/midtrans/transaction', {
         eventId: eventId,
-        amount: event?.price,
+        amount: price,
       }, {
         headers: { Authorization: `Bearer ${user?.token}` }
       });
@@ -127,7 +132,6 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
         });
         setIsJoined(true);
         setEvent(response.data);
-        
       } catch (error) {
         console.error(error);
         Toast.show({
@@ -140,12 +144,22 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
   };
 
   const handleJoinEvent = () => {
+    if (user?.status?.ban) {
+      Toast.show({
+        type: 'error',
+        text1: 'Banned',
+        text2: 'You are banned from joining events.',
+      });
+      return;
+    }
+
     if (event?.price === 'free') {
       joinEvent();
     } else {
+      const discountedPrice = getDiscountedPrice(event?.price as number);
       Alert.alert(
         'Payment Required',
-        `This event requires payment of ${formatIDR(event?.price as number)}. Do you want to proceed to payment?`,
+        `This event requires payment of ${formatIDR(discountedPrice)}. Do you want to proceed to payment?`,
         [
           { text: 'Cancel', style: 'cancel' },
           { text: 'Proceed', onPress: handlePayment },
@@ -162,6 +176,19 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
 
   if (!event) return <ActivityIndicator style={tw`flex-1`} size="large" color="rgb(249 115 22)" />;
 
+  const isEventExpired = moment().isAfter(moment(event.date));
+  const headerHeight = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [height * 0.5, height * 0.2],
+    extrapolate: 'clamp',
+  });
+
+  const headerTitleOpacity = scrollY.interpolate({
+    inputRange: [0, 200],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
+
   if (paymentUrl) {
     return (
       <WebView
@@ -175,18 +202,6 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
       />
     );
   }
-
-  const headerHeight = scrollY.interpolate({
-    inputRange: [0, 200],
-    outputRange: [height * 0.5, height * 0.2],
-    extrapolate: 'clamp',
-  });
-
-  const headerTitleOpacity = scrollY.interpolate({
-    inputRange: [0, 200],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
 
   return (
     <View style={tw`flex-1 bg-gray-100`}>
@@ -205,7 +220,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           <BlurView intensity={80} tint="dark" style={tw`rounded-3xl overflow-hidden`}>
             <View style={tw`p-4`}>
               <Text style={tw`text-3xl font-bold text-white mb-2`}>{event.name}</Text>
-              <Text style={tw`text-lg text-white`}>{moment(event.date).format('dddd, DD MMMM YYYY')}</Text>
+              <Text style={tw`text-lg text-white`}>{moment(event.date).format('dddd, DD MMMM YYYY, HH:mm')}</Text>
             </View>
           </BlurView>
         </Animated.View>
@@ -255,12 +270,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
             </MapView>
           </View>
 
-          <BlurView intensity={80} tint="light" style={tw`mx-5 p-5 rounded-3xl overflow-hidden shadow-lg`}>
-            <View style={tw`flex-row items-center mb-3`}>
-              <Ionicons name="person-circle" size={24} color="rgb(249 115 22)" />
-              <Text style={tw`ml-2 text-base text-gray-700`}>Posted by {event.authorUsername}</Text>
-            </View>
-          </BlurView>
+          
 
           <BlurView intensity={80} tint="light" style={tw`mx-5 p-5 rounded-3xl overflow-hidden shadow-lg`}>
             <Text style={tw`text-2xl font-bold text-gray-800 mb-3`}>About the Event</Text>
@@ -268,13 +278,24 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
               <Ionicons name="pricetag" size={20} color="rgb(249 115 22)" />
               <Text style={tw`ml-2 text-base text-orange-500`}>{event.category}</Text>
             </View>
-            <Text style={tw`text-base text-gray-700 leading-6`}>{event.description}</Text>
+            <Text style={tw`text-base text-gray-700 leading-6 mb-2`}>{event.description}</Text>
+            {user?.member === 'premium' && event.price !== 'free' && (
+              <View style={tw`mt-3`}>
+                <Text style={tw`text-base text-gray-700 leading-6`}>
+                  As a premium member, you get a 20% discount!
+                </Text>
+                <Text style={tw`text-lg text-gray-800 leading-6 mt-1`}>
+                  <Text style={tw`line-through`}>{formatIDR(event.price)}</Text> {' '}
+                  <Text style={tw`text-orange-500`}>{formatIDR(getDiscountedPrice(event.price as number))}</Text>
+                </Text>
+              </View>
+            )}
           </BlurView>
 
           <Animated.View style={[tw`mx-5 my-5`, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
             <BlurView intensity={80} tint="light" style={tw`p-4 rounded-3xl shadow-lg`}>
               <Text style={tw`text-xl font-bold text-center text-gray-800 mb-2`}>
-                {`Participants: ${event.player.length}/${event.quota}`}
+                Participants: {event.player.length}/{event.quota}
               </Text>
               <View style={tw`w-full bg-gray-200 rounded-full h-2.5`}>
                 <View 
@@ -287,31 +308,34 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
             </BlurView>
           </Animated.View>
 
-          {!isJoined && (
-            <TouchableOpacity onPress={handleJoinEvent} style={tw`mx-5 mt-5`}>
-              <LinearGradient
-                colors={['rgb(249 115 22)', 'rgb(234 88 12)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={tw`py-4 px-6 rounded-full shadow-lg`}
+          {isEventExpired ? (
+            <Text style={tw`text-center text-lg font-bold text-red-500`}>
+              Event has ended
+            </Text>
+          ) : (
+            !isJoined && (
+              <TouchableOpacity 
+                onPress={handleJoinEvent} 
+                style={tw`mx-5 mt-5`}
+                disabled={user?.status?.ban}
               >
-                <Text style={tw`text-center text-lg font-bold text-white`}>
-                  {event.price === 'free' ? 'Join Event' : `Pay ${formatIDR(event.price as number)} and Join`}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+                <LinearGradient
+                  colors={user?.status?.ban ? ['gray', 'gray'] : ['rgb(249 115 22)', 'rgb(234 88 12)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={tw`py-4 px-6 rounded-full shadow-lg`}
+                >
+                  <Text style={tw`text-center text-lg font-bold text-white`}>
+                    {user?.status?.ban ? 'You are banned from joining' : (event.price === 'free' ? 'Join Event' : `Pay ${formatIDR(getDiscountedPrice(event.price as number))} and Join`)}
+                  </Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )
           )}
         </Animated.View>
       </Animated.ScrollView>
 
-      <TouchableOpacity
-        style={tw`absolute top-10 left-5 bg-black bg-opacity-50 rounded-full p-2`}
-        onPress={() => navigation.goBack()}
-      >
-        <Ionicons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
-
-      {isJoined && (
+      {!isEventExpired && isJoined && (
         <TouchableOpacity
           style={tw`absolute bottom-8 right-8 w-15 h-15 rounded-full bg-orange-500 justify-center items-center shadow-lg`}
           onPress={() => navigation.navigate('Chat', { eventId })}
@@ -319,6 +343,13 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
           <Ionicons name="chatbubble-ellipses" size={24} color="white" />
         </TouchableOpacity>
       )}
+
+      <TouchableOpacity
+        style={tw`absolute top-10 left-5 bg-black bg-opacity-50 rounded-full p-2`}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={24} color="white" />
+      </TouchableOpacity>
     </View>
   );
 };

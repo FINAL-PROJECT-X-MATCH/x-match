@@ -3,13 +3,19 @@ import * as SecureStore from 'expo-secure-store';
 import axiosInstance from '../config/axiosInstance';
 import { registerForPushNotificationsAsync } from '../utils/notifications';
 import * as Google from 'expo-auth-session/providers/google';
-import * as AuthSession from 'expo-auth-session';
+
+interface Status {
+  ban: boolean;
+  duration: string;
+}
 
 interface User {
   id: string;
   username: string;
   email: string;
   token: string;
+  status: Status;
+  member: string;
 }
 
 interface AuthContextType {
@@ -18,6 +24,7 @@ interface AuthContextType {
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  updateUser: (updatedUser: Partial<User>) => void;
   checkEvent: () => Promise<void>;
   checkNotification: () => Promise<void>;
   unableToJoin: (eventId: string) => Promise<void>;
@@ -42,19 +49,32 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: '919734331309-2t68quo9tpsantm7hdcr0mtfh3938ake.apps.googleusercontent.com',
+    webClientId: "807256542957-fs0dac8c3cc01p5d4641i2imne81ff4q.apps.googleusercontent.com",
+    androidClientId: "807256542957-ldj0hglfg78b4lbn923f1658s4o11j01.apps.googleusercontent.com",
+    iosClientId: "807256542957-2dgs18k6qm31mnkpvu3bo2k6gmf4pqqe.apps.googleusercontent.com"
   });
 
   const saveUserToLocalStorage = async (user: User) => {
     await SecureStore.setItemAsync('user', JSON.stringify(user));
   };
 
+  const createUserObject = (userInfo: any, token: string): User => {
+    return {
+      id: userInfo.id,
+      username: userInfo.username,
+      email: userInfo.email,
+      token: token,
+      status: userInfo.status,
+      member: userInfo.member
+    };
+  };
+
   const login = async (email: string, password: string) => {
     try {
       const response = await axiosInstance.post('/login', { email, password });
+      console.log('Server response:', response.data);
       const { access_token: token, user: userInfo } = response.data;
-      const { id, username, email: userEmail } = userInfo;
-      const newUser = { id, username, email: userEmail, token };
+      const newUser = createUserObject(userInfo, token);
       await saveUserToLocalStorage(newUser);
       await SecureStore.setItemAsync('user_token', token);
       setUser(newUser);
@@ -70,7 +90,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       console.log('User logged in:', newUser);
     } catch (error) {
-      console.error(error);
+      console.error('Login error:', error);
+      throw error;
     }
   };
 
@@ -87,10 +108,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             const res = await axiosInstance.post('/google-login', {
               token: authentication.accessToken,
             });
-
+            console.log('Google login server response:', res.data);
             const { access_token: token, user: userInfo } = res.data;
-            const { id, username, email: userEmail } = userInfo;
-            const newUser = { id, username, email: userEmail, token };
+            const newUser = createUserObject(userInfo, token);
             await saveUserToLocalStorage(newUser);
             await SecureStore.setItemAsync('user_token', token);
             setUser(newUser);
@@ -115,10 +135,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const register = async (username: string, email: string, password: string) => {
     try {
-      await axiosInstance.post('/register', { username, email, password });
-      await login(email, password);
+      const response = await axiosInstance.post('/register', { username, email, password });
+      console.log('Register response:', response.data);
+      const { access_token: token, user: userInfo } = response.data;
+      const newUser = createUserObject(userInfo, token);
+      await saveUserToLocalStorage(newUser);
+      await SecureStore.setItemAsync('user_token', token);
+      setUser(newUser);
     } catch (error) {
-      console.error(error);
+      console.error('Registration error:', error);
+      throw error;
     }
   };
 
@@ -130,6 +156,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error) {
       console.error('Error logging out:', error);
     }
+  };
+
+  const updateUser = (updatedUser: Partial<User>) => {
+    setUser((prevUser) => {
+      if (prevUser) {
+        const newUser = { ...prevUser, ...updatedUser };
+        saveUserToLocalStorage(newUser);
+        return newUser;
+      }
+      return prevUser;
+    });
   };
 
   const checkEvent = async () => {
@@ -203,12 +240,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const userString = await SecureStore.getItemAsync('user');
       if (userString) {
-        const user = JSON.parse(userString);
-        setUser(user);
-        console.log('User loaded from local storage:', user);
+        const userData = JSON.parse(userString);
+        setUser(userData);
+        console.log('User loaded from local storage:', userData);
       }
     } catch (error) {
-      console.error(error);
+      console.error('Error loading user from storage:', error);
     }
   };
 
@@ -217,8 +254,22 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loginWithGoogle, checkEvent, checkNotification, unableToJoin, getNotifications, notificationOK }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      register, 
+      logout, 
+      loginWithGoogle, 
+      updateUser,
+      checkEvent, 
+      checkNotification, 
+      unableToJoin, 
+      getNotifications, 
+      notificationOK
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthProvider;

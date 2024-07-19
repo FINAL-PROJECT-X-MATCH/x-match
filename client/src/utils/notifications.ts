@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
-// Konfigurasi bagaimana notifikasi akan ditampilkan saat aplikasi berjalan di foreground
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

@@ -23,7 +23,7 @@ const Events: React.FC<Props> = ({ navigation }) => {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [sortOption, setSortOption] = useState<'newest' | 'oldest' | 'nearest'>('newest');
+  const [sortOption, setSortOption] = useState<'free' | 'paid' | 'nearest'>('free');
   const [searchText, setSearchText] = useState<string>('');
   const { user } = useAuth();
 
@@ -95,10 +95,10 @@ const Events: React.FC<Props> = ({ navigation }) => {
 
   const sortEvents = () => {
     let sortedEvents = [...filteredEvents];
-    if (sortOption === 'newest') {
-      sortedEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    } else if (sortOption === 'oldest') {
-      sortedEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (sortOption === 'free') {
+      sortedEvents = sortedEvents.filter(event => event.price === 'free');
+    } else if (sortOption === 'paid') {
+      sortedEvents = sortedEvents.filter(event => event.price !== 'free');
     } else if (sortOption === 'nearest' && location) {
       sortedEvents.sort((a, b) => {
         const distanceA = calculateDistance(
@@ -228,11 +228,11 @@ const Events: React.FC<Props> = ({ navigation }) => {
           />
         </View>
         <View style={tw`flex-row justify-between mt-4`}>
-          <TouchableOpacity onPress={() => setSortOption('newest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'newest' ? 'bg-orange-400' : 'bg-gray-100'}`}>
-            <Text style={tw`${sortOption === 'newest' ? 'text-white' : 'text-black'}`}>Newest</Text>
+          <TouchableOpacity onPress={() => setSortOption('free')} style={tw`px-6 py-3 rounded-full ${sortOption === 'free' ? 'bg-orange-400' : 'bg-gray-100'}`}>
+            <Text style={tw`${sortOption === 'free' ? 'text-white' : 'text-black'}`}>Free</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSortOption('oldest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'oldest' ? 'bg-orange-400' : 'bg-gray-100'}`}>
-            <Text style={tw`${sortOption === 'oldest' ? 'text-white' : 'text-black'}`}>Oldest</Text>
+          <TouchableOpacity onPress={() => setSortOption('paid')} style={tw`px-6 py-3 rounded-full ${sortOption === 'paid' ? 'bg-orange-400' : 'bg-gray-100'}`}>
+            <Text style={tw`${sortOption === 'paid' ? 'text-white' : 'text-black'}`}>Paid</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setSortOption('nearest')} style={tw`px-6 py-3 rounded-full ${sortOption === 'nearest' ? 'bg-orange-400' : 'bg-gray-100'}`}>
             <Text style={tw`${sortOption === 'nearest' ? 'text-white' : 'text-black'}`}>Nearest</Text>

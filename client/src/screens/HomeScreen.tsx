@@ -148,7 +148,7 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
       await notificationOK(notification.eventId);
     }
 
-    // Remove notification
+    
     setNotifications((prevNotifications) =>
       prevNotifications.filter((notif) => notif.eventId !== notification.eventId)
     );
@@ -158,9 +158,9 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const banners = [
-    "https://images.pexels.com/photos/863988/pexels-photo-863988.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/248547/pexels-photo-248547.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-    "https://images.pexels.com/photos/841130/pexels-photo-841130.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+    "https://cdn.discordapp.com/attachments/1259788639018287208/1263677643862052946/Spanduk_Pertandingan_Bulutangkis_Simpel_Hijau_Kuning_20240719_090325_0000.png?ex=669b1b04&is=6699c984&hm=7ef092fc8ed29f879d121425305904103391459061ba6f40588121d507ccef05&",
+    "https://cdn.discordapp.com/attachments/1259788639018287208/1263681487241347248/Untitled_design-2.png?ex=669b1e98&is=6699cd18&hm=7041201f48d15729d7a14767613a266a265b9d4a449636221d8afa6a0dd9ad86&",
+    "https://cdn.discordapp.com/attachments/1259788639018287208/1263681060093431898/Merah_dan_Kuning_Ilustrasi_Olahraga_Youtube_Thumbnail_20240719_091702_0000.png?ex=669b1e32&is=6699ccb2&hm=232c5eb1cc5de7eb1cb76a3cc20c3303d61567bea8340f6fe01d039aefc01abf&"
   ];
 
   const renderBanner = ({ item, index }: { item: string, index: number }) => (

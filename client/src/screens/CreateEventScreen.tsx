@@ -6,7 +6,6 @@ import MapView, { Marker, MapPressEvent, PROVIDER_DEFAULT } from 'react-native-m
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { useAuth } from '../context/AuthContext';
 import Modal from 'react-native-modal';
-import RNPickerSelect from 'react-native-picker-select';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
 import axiosInstance from '../config/axiosInstance';
@@ -28,9 +27,11 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<string | null>(null);
   const [location, setLocation] = useState({ latitude: -7.2575, longitude: 112.7521 });
-  const [modalVisible, setModalVisible] = useState(false);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [locationPicked, setLocationPicked] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [region, setRegion] = useState({
     latitude: -7.2575,
     longitude: 112.7521,
@@ -43,6 +44,13 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
 
   const { user } = useAuth();
   const ref = useRef<any>(null);
+
+  const categories = [
+    { label: 'Football', value: 'Football' },
+    { label: 'Futsal', value: 'Futsal' },
+    { label: 'Gym', value: 'Gym' },
+    { label: 'Basketball', value: 'Basketball' },
+  ];
 
   useEffect(() => {
     (async () => {
@@ -133,9 +141,9 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
           text1: 'Event Created',
           text2: 'Your event has been created successfully.'
         });
-        navigation.navigate('EventDetail', { eventId: createdEvent._id }); // Navigate to EventDetail page
+        navigation.navigate('EventDetail', { eventId: createdEvent._id });
         
-        // Reset form state
+        // Reset form
         setName('');
         setCategory('');
         setAddress('');
@@ -172,6 +180,12 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
     setDate(currentDate);
   };
 
+  const handleTimeChange = (event: any, selectedTime: Date | undefined) => {
+    const currentTime = selectedTime || date;
+    setShowTimePicker(false);
+    setDate(currentTime);
+  };
+
   return (
     <KeyboardAvoidingView 
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -185,6 +199,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
         <Text style={tw`text-4xl font-bold mb-8 text-center text-white`}>Create Event</Text>
         
         <View style={tw`bg-white rounded-3xl shadow-lg p-6 mb-6`}>
+          {/* Event Name */}
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Event Name</Text>
             <View style={tw`flex-row items-center bg-gray-100 rounded-xl p-2`}>
@@ -198,6 +213,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             </View>
           </View>
           
+          {/* Description */}
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Description</Text>
             <View style={tw`bg-gray-100 rounded-xl p-2`}>
@@ -211,36 +227,37 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             </View>
           </View>
 
+          {/* Category */}
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Category</Text>
-            <View style={tw`bg-gray-100 rounded-xl`}>
-              <RNPickerSelect
-                onValueChange={(value) => setCategory(value)}
-                items={[
-                  { label: 'Football', value: 'Football' },
-                  { label: 'Futsal', value: 'Futsal' },
-                  { label: 'Gym', value: 'Gym' },
-                  { label: 'Basketball', value: 'Basketball' },
-                ]}
-                style={{
-                  inputIOS: tw`p-4 text-gray-800 text-lg`,
-                  inputAndroid: tw`p-4 text-gray-800 text-lg`,
-                }}
-                placeholder={{ label: 'Select a category', value: null }}
-                Icon={() => <MaterialCommunityIcons name="chevron-down" size={24} color="rgb(249 115 22)" />}
-              />
-            </View>
-          </View>
-          
-          <View style={tw`mb-6`}>
-            <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Date</Text>
             <TouchableOpacity
-              onPress={() => setShowDatePicker(true)}
+              onPress={() => setCategoryModalVisible(true)}
               style={tw`bg-gray-100 p-4 rounded-xl flex-row items-center justify-between`}
             >
-              <Text style={tw`text-gray-800 text-lg`}>{moment(date).format('MMMM D, YYYY')}</Text>
-              <MaterialCommunityIcons name="calendar" size={24} color="rgb(249 115 22)" />
+              <Text style={tw`text-gray-800 text-lg`}>{category || 'Select a category'}</Text>
+              <MaterialCommunityIcons name="chevron-down" size={24} color="rgb(249 115 22)" />
             </TouchableOpacity>
+          </View>
+          
+          {/* Date and Time */}
+          <View style={tw`mb-6`}>
+            <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Date and Time</Text>
+            <View style={tw`flex-row justify-between`}>
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                style={tw`bg-gray-100 p-4 rounded-xl flex-1 mr-2 flex-row items-center justify-between`}
+              >
+                <Text style={tw`text-gray-800 text-lg`}>{moment(date).format('MMM D, YYYY')}</Text>
+                <MaterialCommunityIcons name="calendar" size={24} color="rgb(249 115 22)" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowTimePicker(true)}
+                style={tw`bg-gray-100 p-4 rounded-xl flex-1 ml-2 flex-row items-center justify-between`}
+              >
+                <Text style={tw`text-gray-800 text-lg`}>{moment(date).format('HH:mm')}</Text>
+                <MaterialCommunityIcons name="clock-outline" size={24} color="rgb(249 115 22)" />
+              </TouchableOpacity>
+            </View>
             {showDatePicker && (
               <DateTimePicker
                 value={date}
@@ -249,8 +266,17 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
                 onChange={handleDateChange}
               />
             )}
+            {showTimePicker && (
+              <DateTimePicker
+                value={date}
+                mode="time"
+                display="default"
+                onChange={handleTimeChange}
+              />
+            )}
           </View>
           
+          {/* Quota */}
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Quota</Text>
             <View style={tw`flex-row items-center bg-gray-100 rounded-xl`}>
@@ -269,6 +295,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             </View>
           </View>
 
+          {/* Paid Event */}
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Paid Event</Text>
             <View style={tw`flex-row items-center`}>
@@ -282,6 +309,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             </View>
           </View>
 
+          {/* Price */}
           {!isFree && (
             <View style={tw`mb-6`}>
               <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Price (Rp)</Text>
@@ -302,10 +330,11 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             </View>
           )}
           
+          {/* Location */}
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Location</Text>
             <TouchableOpacity
-              onPress={() => setModalVisible(true)}
+              onPress={() => setLocationModalVisible(true)}
               style={tw`bg-orange-500 p-4 rounded-xl flex-row items-center justify-center`}
             >
               <MaterialCommunityIcons name="map-marker" size={24} color="white" style={tw`mr-2`} />
@@ -315,7 +344,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
               <Text style={tw`mt-2 text-gray-600 italic`}>{address}</Text>
             )}
           </View>
-          
+          {/* Event Image */}
           <View style={tw`mb-6`}>
             <Text style={tw`text-lg font-semibold mb-2 text-gray-700`}>Event Image</Text>
             <TouchableOpacity
@@ -343,9 +372,10 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
         )}
       </ScrollView>
 
+      {/* Location Modal */}
       <Modal
-        isVisible={modalVisible}
-        onBackdropPress={() => setModalVisible(false)}
+        isVisible={locationModalVisible}
+        onBackdropPress={() => setLocationModalVisible(false)}
         style={tw`m-0 justify-end`}
       >
         <View style={tw`bg-white rounded-t-3xl p-6 h-4/5`}>
@@ -367,7 +397,7 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
                   longitudeDelta: 0.0421,
                 });
                 setLocationPicked(true);
-                setModalVisible(false);
+                setLocationModalVisible(false);
               }
             }}
             query={{
@@ -394,11 +424,34 @@ const CreateEventScreen: React.FC<CreateEventScreenProps> = ({ navigation }) => 
             {locationPicked && <Marker coordinate={location} />}
           </MapView>
           <TouchableOpacity
-            onPress={() => setModalVisible(false)}
+            onPress={() => setLocationModalVisible(false)}
             style={tw`bg-orange-500 p-4 rounded-xl mt-4`}
           >
             <Text style={tw`text-white text-center font-semibold text-lg`}>Confirm Location</Text>
           </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {/* Category Modal */}
+      <Modal
+        isVisible={categoryModalVisible}
+        onBackdropPress={() => setCategoryModalVisible(false)}
+        style={tw`m-0 justify-end`}
+      >
+        <View style={tw`bg-white rounded-t-3xl p-6`}>
+          <Text style={tw`text-2xl font-bold mb-4 text-center text-orange-500`}>Select Category</Text>
+          {categories.map((cat) => (
+            <TouchableOpacity
+              key={cat.value}
+              onPress={() => {
+                setCategory(cat.value);
+                setCategoryModalVisible(false);
+              }}
+              style={tw`p-4 border-b border-gray-200`}
+            >
+              <Text style={tw`text-lg text-gray-800`}>{cat.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </Modal>
     </KeyboardAvoidingView>

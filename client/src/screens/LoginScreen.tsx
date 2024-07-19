@@ -18,12 +18,17 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Toast from 'react-native-toast-message';
 import tw from 'twrnc';
+import * as WebBrowser from 'expo-web-browser'
+
+WebBrowser.maybeCompleteAuthSession()
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
 type Props = {
   navigation: LoginScreenNavigationProp;
 };
+
+
 
 const { height } = Dimensions.get('window');
 

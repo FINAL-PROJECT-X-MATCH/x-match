@@ -18,6 +18,10 @@ router.get('/users/check-status', auth, UserController.checkStatus);
 router.get('/user/notifications', auth, UserController.getNotifications);
 router.delete('/user/deleteNotif/:eventId', auth, UserController.notificationOK)
 router.post('/users/push-token', auth, UserController.savePushToken);
+router.post('/upgrade-to-premium', auth, UserController.upgradeToPremium);
+
+// Route for updating user to premium
+router.post('/update-to-premium', auth, UserController.updateToPremium);
 
 
 module.exports = router;

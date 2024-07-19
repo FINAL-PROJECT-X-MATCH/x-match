@@ -4,11 +4,19 @@ const { ObjectId } = require('mongodb');
 const { getDb } = require('../config/db');
 const cloudinary = require('cloudinary').v2;
 const { OAuth2Client } = require('google-auth-library');
+const midtransClient = require('midtrans-client');
+
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const snap = new midtransClient.Snap({
+  isProduction: false,
+  serverKey: 'SB-Mid-server-8V82JIS0MWfU2t-6hZwuynDl',
+  clientKey: 'SB-Mid-client-0EqnETEPgKmeo1sV',
 });
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -29,7 +37,8 @@ class UserController {
           duration: ""
         },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        member: "free"
       };
       await db.collection('users').insertOne(user);
       const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -38,7 +47,9 @@ class UserController {
         user: {
           id: user._id.toString(),
           username: user.username,
-          email: user.email
+          email: user.email,
+          status: user.status,
+          member: user.member
         }
       });
     } catch (error) {
@@ -72,7 +83,8 @@ class UserController {
             duration: ""
           },
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
+          member: "free"
         };
         await db.collection('users').insertOne(user);
       }
@@ -84,7 +96,9 @@ class UserController {
         user: {
           id: user._id.toString(),
           username: user.username,
-          email: user.email
+          email: user.email,
+          status: user.status,
+          member: user.member
         }
       });
     } catch (error) {
@@ -110,7 +124,9 @@ class UserController {
         user: {
           id: user._id.toString(),
           username: user.username,
-          email: user.email
+          email: user.email,
+          status: user.status,
+          member: user.member
         }
       });
     } catch (error) {
@@ -287,6 +303,47 @@ class UserController {
       );
 
       res.status(200).json({ message: 'Push token saved successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  static async upgradeToPremium(req, res) {
+    try {
+      const userId = req.user._id;
+      const db = getDb();
+      const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
+
+      const parameter = {
+        transaction_details: {
+          order_id: `ORDER-${new Date().getTime()}`,
+          gross_amount: 20000,
+        },
+        credit_card: {
+          secure: true,
+        },
+        customer_details: {
+          email: user.email,
+          username: user.username,
+        },
+      };
+
+      const transaction = await snap.createTransaction(parameter);
+      res.status(200).json({ token: transaction.token });
+    } catch (error) {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  static async updateToPremium(req, res) {
+    try {
+      const userId = req.user._id;
+      const db = getDb();
+      await db.collection('users').updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { member: 'premium' } }
+      );
+      res.status(200).json({ message: 'User upgraded to premium successfully' });
     } catch (error) {
       res.status(500).json({ error: 'Internal server error' });
     }
