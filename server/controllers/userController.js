@@ -16,7 +16,9 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 class UserController {
   static async register(req, res) {
     try {
+      console.log(req.body,"<<<<<<<<<<<<ini req body");
       const { username, email, password } = req.body;
+      console.log(req.body, "==== di register");
       const hashedPassword = await bcrypt.hash(password, 8);
       const db = getDb();
       const user = {
@@ -46,51 +48,7 @@ class UserController {
     }
   }
 
-  static async googleLogin(req, res) {
-    const { token } = req.body;
 
-    try {
-      const ticket = await client.verifyIdToken({
-        idToken: token,
-        audience: process.env.GOOGLE_CLIENT_ID,
-      });
-
-      const payload = ticket.getPayload();
-      const { email, name } = payload;
-
-      const db = getDb();
-      let user = await db.collection('users').findOne({ email });
-
-      if (!user) {
-        user = {
-          username: name,
-          email,
-          password: null,
-          notification: [],
-          status: {
-            ban: false,
-            duration: ""
-          },
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        await db.collection('users').insertOne(user);
-      }
-
-      const jwtToken = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-      res.send({
-        access_token: jwtToken,
-        user: {
-          id: user._id.toString(),
-          username: user.username,
-          email: user.email
-        }
-      });
-    } catch (error) {
-      res.status(400).send(error);
-    }
-  }
 
   static async login(req, res) {
     try {
@@ -170,10 +128,11 @@ class UserController {
       if (users.length === 0) {
         console.log("User not found");
       } else if (users.length > 0) {
-        users.forEach(async (user) => {
+        for(const user of users) {
+          console.log(user, ` ini di forEach`);
           unbannedUsers.push(user._id);
           const _id = user._id;
-          await db.collection('users').updateOne(
+          const response = await db.collection('users').updateOne(
             { _id },
             {
               $set: {
@@ -182,7 +141,10 @@ class UserController {
               }
             }
           );
-        });
+          console.log(response, "ini hasil update");
+          const find = await db.collection('users').findOne({_id})
+          console.log(find, "seteleah berubah");
+        };
         console.log(`User(s) with ID(s) ${unbannedUsers.join(',')} has/have been unbanned`);
       }
     } catch (error) {
@@ -216,7 +178,6 @@ class UserController {
         message: `User with ID ${userId} has been banned for 1 day`
       });
     } catch (error) {
-      console.log(error);
       res.status(500).send({ error: "Internal Server Error" });
     }
   }

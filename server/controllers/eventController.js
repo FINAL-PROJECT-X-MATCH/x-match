@@ -30,6 +30,7 @@ class EventController {
 
   static async createEvent(req, res) {
     try {
+      console.log('masuk create event');
       const { name, category, address, date, quota, description, location, price } = req.body;
       const result = await cloudinary.uploader.upload(req.file.path);
       const db = getDb();
@@ -51,7 +52,6 @@ class EventController {
         updatedAt: new Date(),
         price: eventPrice,
       };
-
       event.player.push(req.user._id)
 
       await db.collection('events').insertOne(event);
@@ -64,17 +64,19 @@ class EventController {
   static async joinEvent(req, res) {
     try {
       const db = getDb();
+      console.log(req.user._id, "ini user id")
       const event = await db.collection('events').findOne({ _id: new ObjectId(req.params.eventId) });
       if (!event) {
         return res.status(404).send({ message: 'Event not found' });
       }
-      if (event.player.includes(req.user._id)) {
+      if (event.player.map(playerId => playerId.toString()).includes(req.user._id.toString())) {
         return res.status(400).send({ message: 'User already joined the event' });
       }
       if (event.player.length >= event.quota) {
         return res.status(400).send({ message: 'Event is full' });
       }
       event.player.push(req.user._id);
+      console.log(event);
       await db.collection('events').updateOne({ _id: new ObjectId(req.params.eventId) }, { $set: { player: event.player } });
       res.send(event);
     } catch (error) {
@@ -208,18 +210,15 @@ class EventController {
       console.log(`Event ID: ${eventId}`);
 
       const user = await db.collection("users").findOne({ _id: userId });
-      if (!user) {
-        console.log("User not found");
-        return res.status(404).json({ message: "User not found" });
-      }
-
       const notifications = user.notification || [];
       console.log(`User notifications before update: ${JSON.stringify(notifications)}`);
 
       const index = notifications.findIndex(obj => obj.eventId.equals(new ObjectId(eventId)));
+      
       if (index !== -1) {
         notifications.splice(index, 1);
-      }
+      } 
+      
       console.log(`User notifications after update: ${JSON.stringify(notifications)}`);
 
       await db.collection("users").updateOne(
@@ -232,6 +231,7 @@ class EventController {
       );
 
       const event = await db.collection("events").findOne({ _id: new ObjectId(eventId) });
+     console.log(event, "ini event");
       if (!event) {
         console.log("Event not found");
         return res.status(404).json({ message: "Event not found" });
@@ -255,7 +255,6 @@ class EventController {
 
       res.status(201).json({ message: 'Successfully updated notification and event player' });
     } catch (error) {
-      console.error("Error in unableToJoin:", error);
       res.status(400).json({ message: 'Error updating notification and event player', error });
     }
   }
@@ -302,7 +301,7 @@ class EventController {
         updatedAt: new Date()
       };
       await db.collection('transactions').insertOne(transactionData);
-
+      console.log(transaction.token, "<<<<<<<")
       res.send({ token: transaction.token });
     } catch (error) {
       res.status(400).send(error);
@@ -319,12 +318,10 @@ class EventController {
       if (!transaction) {
         return res.status(404).send({ message: 'Transaction not found' });
       }
-  
-      await db.collection('transactions').updateOne(
+        await db.collection('transactions').updateOne(
         { _id: transaction._id },
         { $set: { transactionStatus: transaction_status, updatedAt: new Date() } }
       );
-  
       if (transaction_status === 'settlement') {
         await db.collection('events').updateOne(
           { _id: transaction.eventId },
@@ -334,7 +331,6 @@ class EventController {
   
       res.status(200).send({ message: 'Transaction status updated' });
     } catch (error) {
-      console.log(error);
       res.status(400).send(error);
     }
   }

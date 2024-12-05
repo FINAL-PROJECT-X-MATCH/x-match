@@ -42,7 +42,6 @@ class ChatController {
       });
       res.send(chat);
     } catch (error) {
-      console.error('Error in postChat:', error); 
       res.status(400).send({ message: 'Failed to create chat', error });
     }
   }
@@ -50,6 +49,7 @@ class ChatController {
   static async getChats(req, res) {
     try {
       const { eventId } = req.params;
+      console.log(eventId, "ini di params");
       const chats = await getChatsByEventId(eventId);
       res.send(chats);
     } catch (error) {

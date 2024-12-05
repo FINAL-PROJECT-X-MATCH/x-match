@@ -8,7 +8,6 @@ const router = express.Router();
 
 router.post('/register', UserController.register);
 router.post('/login', UserController.login);
-router.post('/google-login', UserController.googleLogin);
 router.get('/user', auth, UserController.getUser);
 router.patch('/user', auth, upload.single('image'), UserController.updateUser);
 router.get('/user/events', auth, UserController.getUserEvents);
